@@ -1,7 +1,6 @@
 ---
-title: "About"
+title: "About Me"
 date: 2019-06-01T16:35:31+08:00
-draft: true
 ---
 
 # Me

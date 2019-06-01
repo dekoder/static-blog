@@ -31,7 +31,7 @@ after_script:
 env:
  global:
    # Github Pages
-   - GH_REF: git@github.com:n0b0dyCN/n0b0dyCN.github.io.git
+   - GH_REF: github.com:n0b0dyCN/n0b0dyCN.github.io.git
 deploy:
   provider: pages # 重要，指定这是一份github pages的部署配置
   skip-cleanup: true # 重要，不能省略

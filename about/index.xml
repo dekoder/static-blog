@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Abouts on n0b0dy&#39;s site</title>
+    <link>http://n0b0dycn.github.io/about/</link>
+    <description>Recent content in Abouts on n0b0dy&#39;s site</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 01 Jun 2019 16:35:31 +0800</lastBuildDate>
+    
+	<atom:link href="http://n0b0dycn.github.io/about/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>About Me</title>
+      <link>http://n0b0dycn.github.io/about/about/</link>
+      <pubDate>Sat, 01 Jun 2019 16:35:31 +0800</pubDate>
+      
+      <guid>http://n0b0dycn.github.io/about/about/</guid>
+      <description>Me Tianyi Li
+Institute of Computer Science and Technology
+Peking University
+CTF Team：Eur3kA &amp;amp; r3kapig
+ID: n0b0dy
+Education  Peking University (PKU) 2014 - 2818, The School of Electronics Engineering and Computer Science (EECS). Bachelor of Science in Computer Science and Technology Peking University (PKU) 2018 - present, Institute of Computer Science &amp;amp; Technology (ICST). Master of Science in Computer Application Technology  Publications  Guancheng Li, Yongheng Chen, Tianyi Li, Tongxin Li, Xinfeng Wu, Chao Zhang, Xinhui Han POSTER: PT-DBG: Automatically anti-debugging bypassing based on Intel Processor Trace，Security &amp;amp; Privacy IEEE, 2018</description>
+    </item>
+    
+  </channel>
+</rss>

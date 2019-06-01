@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CTF on n0b0dy&#39;s site</title>
+    <link>http://n0b0dycn.github.io/categories/ctf/</link>
+    <description>Recent content in CTF on n0b0dy&#39;s site</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 26 Mar 2019 16:04:55 +0800</lastBuildDate>
+    
+	<atom:link href="http://n0b0dycn.github.io/categories/ctf/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>0ctf 2019 Quals Web writeup</title>
+      <link>http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/</link>
+      <pubDate>Tue, 26 Mar 2019 16:04:55 +0800</pubDate>
+      
+      <guid>http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/</guid>
+      <description>本次比赛两个web题都是RicterZ大佬出的，膜一波Orz
+Ghost Pepper 本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：
+然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录http://karaf:karaf@192.168.2.88:31337/jolokia/。到这里我们可以发现这是一个裸的jolokia控制台。
+jolokia是一个Java系统管理解决方案。其采用轻量级的Json格式传输数据，可以方便地管理系统中的Servlet。所以当应用暴露了jolokia目录的时候，基本上算是直接暴露出来一个webshell。我们可以通过访问http://karaf:karaf@192.168.2.88:31337/jolokia/list来查看可用的api，来寻找利用点。在本题中有三种解题方式：
+解法 1 通过karaf下bundle模块远程安装一个我们自己写的恶意bundle，反弹一个shell到自己的服务器上。参考https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/web_osgi。但是由于我不熟悉Java编译出来的东西始终装不上Orz，等弄好了把整个项目代码扔github上面去= =
+解法 2 第二种方法应该算是最省事的方法了，即通过karaf下feature模块安装一个webconsole：
+之后我们访问http://192.168.2.88:31337/system/console/bundles就可以进入到webconsole的管理界面。在管理界面点Main -&amp;gt; Goto即可进入console。
+在console中执行cat /flag即可得到flag：
+解法 3 使用karaf中的Instance模块，在安装一个新的instance的时候进行instance的命令行参数注入。我们看karaf源码：https://github.com/apache/karaf。在org/apache/karaf/instance/core/InstancesMBean.java文件中定义了MBean的接口：
+// Operations void startInstance(String name) throws MBeanException; void startInstance(String name, String opts) throws MBeanException; void startInstance(String name, String opts, boolean wait, boolean debug) throws MBeanException;  我们找startInstance方法的实现，在文件org/apache/karaf/instance/command/StartCommand.java中其调用了Instance的Start方法：
+跟进Instance类的start方法，其调用了InstanceService中的startInstance方法：
+继续跟进org/apache/karaf/instance/core/internal/InstanceServiceImpl.java，其调用了doStart方法：
+继续看doStart方法，其中有明显的命令拼接：
+在此处，我们发现javaOpt是我们可控的参数。在InstancesMBeanImpl中我们发现createInstance参数有一个就是javaOpt：
+于是我们给出攻击思路：
+ 创建一个新的Instance，在其javaOpt字段进行参数注入 开启这个新的Instance执行我们的命令 停止Instance 删除Instance  最后我们给出exp：
+import requests from pprint import pprint url = &amp;quot;http://111.</description>
+    </item>
+    
+  </channel>
+</rss>

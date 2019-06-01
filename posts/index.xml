@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on n0b0dy&#39;s site</title>
+    <link>http://n0b0dycn.github.io/posts/</link>
+    <description>Recent content in Posts on n0b0dy&#39;s site</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 11 Apr 2019 17:04:22 +0800</lastBuildDate>
+    
+	<atom:link href="http://n0b0dycn.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Alpha 21264</title>
+      <link>http://n0b0dycn.github.io/2019/alpha-21264/</link>
+      <pubDate>Thu, 11 Apr 2019 17:04:22 +0800</pubDate>
+      
+      <guid>http://n0b0dycn.github.io/2019/alpha-21264/</guid>
+      <description>The Alpha 21264 Microprocessor综述 前言 本文为北京大学研究生课程高等计算机体系结构（18-19学年第2学期）的作业。任务是对Alpha Microprocessor的设计进行综述。笔者才疏学浅，不到之处望读者斧正。
+总览 Alpha 21264处理器每个周期可以取四条指令，同时其在内部支持乱序执行。在这种情况下，指令可以被并行执行，并且可以在其最早的能执行的时刻被执行。同时，此处理器支持推测执行，很大程度上加速了处理器的执行速度。Alpha 21264处理器复杂的转移预测机制支持了推测执行。在这些设计的支持下，该处理器的速度比前代Alpha 21164快50%到200%。
+在存储系统方面，Alpha 21264提供了片上与片下的缓存系统，降低了访问存储的平均延迟。同时，21264也增加了对内存的并行访问，提高了数据带宽。在Stream benchmark中，Alpha 21264能够获得1.3GBytes/sec的访存速度。
+Alpha 21264的主频在500至600MHz之间，由15M个2.2V，0.35mm晶体管组成。芯片面积为$3.1cm^2$，有587个管脚。芯片平面图如下：
+芯片的结构抽象图如下：
+指令流 (Instruction Pipeline &amp;ndash; Fetch) Alpha 21264处理器每个周期会向乱序执行部件传递四条指令。处理器会根据转移预测指令来进行指令的预取。由于转移预测的准确率极高，所以流水线在绝大部分时候都能被正确的指令所填充。
+Alpha 21264通过两个结构支持取指的高效：路组预测(line and way prediction)和转移预测(branch prediction)。
+Line and way prediction Alpha 21264处理器的I-Cache是64Kb，2路组相连。处理器实现了路预测算法，结合了组相联的缓存效率与直接映射缓存的访问速度。取指部件的结构图如下：
+每次取四条指令之后，都会生成一个line和way的预测。该预测指向接下来四条指令的取指位置，包括line和way两个位置信息。处理器在根据预测读取接下来四条指令的同时，会并行地对正在执行的的四条指令的正确性进行检查。
+在I-Cache被填充时，以及预测出错时，预测器会被重新训练。在绝大部分的应用程序中，预测器对于line的预测正确率达到了85%，对way的预测准确率达到了100%。为了避免过度训练，预测器设置了2 bit的滞后计数器。当且仅当目前预测器多次发生错误的时候才会进行重新训练。由于预测的高准确率以及很低的miss panalty，该预测机制能够大大提升处理器速度。不仅如此，对于一些可预测的跳转（如动态链接库的调用），可以被很好地训练，减少了计算转移地址的开销（约8个周期）。
+当I-Cache发生缓存不命中时，I-Cache会向L2缓存预取最多64字节的数据（即16条指令）。这种预取模式很大地提高了取指的带宽。
+转移预测 相比于前代的处理器，转移预测模块对于Alpha 21264的影响更大，原因如下：
+ Alpha 21264的panelty是7个周期，比前代稍高。 Alpha 21264处理器的指令执行速度大大提升。 成功的转移预测能够更好地配合推测执行机制。21164处理器可以容纳20条推测执行的指令，而21264可以容纳多达80条指令。  Alpha 21264的转移预测系统从局部预测和全局预测中动态选择。再绝大多数benchmark中可以得到90%到100%的准确率。21264的预测器结构如下图：
+该图左侧是10-bit局部转移pattern，并包含3-bit计数器。局部预测器根据这10-bit从1024个转移计数器中选取一个。图右侧是12-bit的全局转移预测器，对应着全局信息表中的4096个条目之一。同时处理器还有一个Choice Predictor来决定选择哪个预测器的结果。这个predictor根据12-bit的全局记录对4096个条目进行索引。
+当一个转移指令被最终提交之后，局部预测器被更新。当一个转移指令发射时，全局计数器就会提前被更新。当然，全局计数器会保存该计数器的备份来防止转移预测失败。
+乱序执行 (Out-Of-Order Execution) Alpha 21264的乱序执行机制允许每个周期发射四条指令。OOO部件会对寄存器进行重命名及映射以解决不必要的寄存器依赖。指令将会被放在队列中，等待其需要的部件的空闲。Alpha 21264有两个定点运算部件以及两个浮点运算部件，所以每个周期处理器最多同时指令6条指令。
+下图是乱序执行部件的结构图：
+寄存器重命名 寄存器重命名为每条指令分配程序员不可见的结果寄存器。这种技术有以下优点：
+ 较好地支持推测执行 在解决了write-after-read和write-after-write冲突的同时保留了read-after-write的依赖  上图的左侧更详细地展示了重命名部件。不难发现，寄存器重命名是在Content-Addressable Memory(CAM)上完成的。流水线中所涉及到的所有操作都发生在重命名后的寄存器中，而不是用户可见的寄存器。</description>
+    </item>
+    
+    <item>
+      <title>0ctf 2019 Quals Web writeup</title>
+      <link>http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/</link>
+      <pubDate>Tue, 26 Mar 2019 16:04:55 +0800</pubDate>
+      
+      <guid>http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/</guid>
+      <description>本次比赛两个web题都是RicterZ大佬出的，膜一波Orz
+Ghost Pepper 本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：
+然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录http://karaf:karaf@192.168.2.88:31337/jolokia/。到这里我们可以发现这是一个裸的jolokia控制台。
+jolokia是一个Java系统管理解决方案。其采用轻量级的Json格式传输数据，可以方便地管理系统中的Servlet。所以当应用暴露了jolokia目录的时候，基本上算是直接暴露出来一个webshell。我们可以通过访问http://karaf:karaf@192.168.2.88:31337/jolokia/list来查看可用的api，来寻找利用点。在本题中有三种解题方式：
+解法 1 通过karaf下bundle模块远程安装一个我们自己写的恶意bundle，反弹一个shell到自己的服务器上。参考https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/web_osgi。但是由于我不熟悉Java编译出来的东西始终装不上Orz，等弄好了把整个项目代码扔github上面去= =
+解法 2 第二种方法应该算是最省事的方法了，即通过karaf下feature模块安装一个webconsole：
+之后我们访问http://192.168.2.88:31337/system/console/bundles就可以进入到webconsole的管理界面。在管理界面点Main -&amp;gt; Goto即可进入console。
+在console中执行cat /flag即可得到flag：
+解法 3 使用karaf中的Instance模块，在安装一个新的instance的时候进行instance的命令行参数注入。我们看karaf源码：https://github.com/apache/karaf。在org/apache/karaf/instance/core/InstancesMBean.java文件中定义了MBean的接口：
+// Operations void startInstance(String name) throws MBeanException; void startInstance(String name, String opts) throws MBeanException; void startInstance(String name, String opts, boolean wait, boolean debug) throws MBeanException;  我们找startInstance方法的实现，在文件org/apache/karaf/instance/command/StartCommand.java中其调用了Instance的Start方法：
+跟进Instance类的start方法，其调用了InstanceService中的startInstance方法：
+继续跟进org/apache/karaf/instance/core/internal/InstanceServiceImpl.java，其调用了doStart方法：
+继续看doStart方法，其中有明显的命令拼接：
+在此处，我们发现javaOpt是我们可控的参数。在InstancesMBeanImpl中我们发现createInstance参数有一个就是javaOpt：
+于是我们给出攻击思路：
+ 创建一个新的Instance，在其javaOpt字段进行参数注入 开启这个新的Instance执行我们的命令 停止Instance 删除Instance  最后我们给出exp：
+import requests from pprint import pprint url = &amp;quot;http://111.</description>
+    </item>
+    
+  </channel>
+</rss>

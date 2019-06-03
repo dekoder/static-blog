@@ -3,7 +3,7 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
     <url>
-      <loc>http://n0b0dycn.github.io/about/about/</loc>
+      <loc>http://n0b0dycn.github.io/about/</loc>
       
       <lastmod>2019-06-01T16:35:31+08:00</lastmod>
       
@@ -13,7 +13,7 @@
     </url>
   
     <url>
-      <loc>http://n0b0dycn.github.io/2019/alpha-21264/</loc>
+      <loc>http://n0b0dycn.github.io/2019/04/alpha-21264/</loc>
       
       <lastmod>2019-04-11T17:04:22+08:00</lastmod>
       
@@ -23,7 +23,7 @@
     </url>
   
     <url>
-      <loc>http://n0b0dycn.github.io/2019/0ctf-2019-quals-web-writeup/</loc>
+      <loc>http://n0b0dycn.github.io/2019/03/0ctf-2019-quals-web-writeup/</loc>
       
       <lastmod>2019-03-26T16:04:55+08:00</lastmod>
       
@@ -33,13 +33,9 @@
     </url>
   
     <url>
-      <loc>http://n0b0dycn.github.io/about/</loc>
-      
-      <lastmod>2019-06-01T16:35:31+08:00</lastmod>
+      <loc>http://n0b0dycn.github.io/links/</loc>
       
       
-      
-      <priority>0</priority>
       
       
     </url>

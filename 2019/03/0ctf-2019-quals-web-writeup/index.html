@@ -78,6 +78,42 @@ import requests from pprint import pprint url = &quot;http://111.",
 }
 </script>
 
+  
+  <script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
 </head>
 
   
@@ -144,6 +180,20 @@ import requests from pprint import pprint url = &quot;http://111.",
                         <a href="http://n0b0dycn.github.io/categories/ctf/"> CTF </a>
                         
                 </span>
+                <span class="post-tags">
+                    
+                        <section>
+                        <i class="iconfont icon-tag"></i>Tag(s): 
+                        
+                        <span class="tag"><a href="http://n0b0dycn.github.io/tags/web/">
+                                #web</a></span>
+                        
+                        <span class="tag"><a href="http://n0b0dycn.github.io/tags/ctf/">
+                                #ctf</a></span>
+                        
+                        </section>
+                    
+                    </span>
         </div>
     </header>
     <div class="post-content">
@@ -375,26 +425,6 @@ var_dump(file_get_contents(&quot;$home/flag&quot;));
             </p>
             
             
-    </div>
-
-  
-    <div class="post-tags">
-        
-            <section>
-            <i class="iconfont icon-tag"></i>Tag(s): 
-            
-            <span class="tag"><a href="http://n0b0dycn.github.io/tags/web/">
-                    #web</a></span>
-            
-            <span class="tag"><a href="http://n0b0dycn.github.io/tags/ctf/">
-                    #ctf</a></span>
-            
-            </section>
-        
-        <section>
-                <a href="javascript:window.history.back();">back</a></span> · 
-                <span><a href="http://n0b0dycn.github.io/">home</a></span>
-        </section>
     </div>
 
     <div class="post-nav">

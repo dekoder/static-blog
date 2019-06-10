@@ -15,7 +15,7 @@ install:
   - git init
   - git config user.name "n0b0dy"
   - git config user.email "n0b0dypku@gmail.com"
-  - git remote add origin "${GH_REF}"
+  - git remote add origin "https://$GITHUB_TOKEN@${GH_REF}"
   - git pull
   - cd ..
 script:
@@ -29,7 +29,7 @@ after_script:
 env:
  global:
    # Github Pages
-   - GH_REF: git@github.com/n0b0dyCN/n0b0dyCN.github.io.git
+   - GH_REF: github.com/n0b0dyCN/n0b0dyCN.github.io.git
 deploy:
   provider: pages
   skip-cleanup: true

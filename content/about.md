@@ -23,7 +23,7 @@ ID: n0b0dy
   * Institute of Computer Science & Technology (ICST).
   * Master of Science in Computer Application Technology
 
-* __2014 - 2818__, Peking University (PKU)
+* __2014 - 2018__, Peking University (PKU)
   * The School of Electronics Engineering and Computer Science (EECS).
   * Bachelor of Science in Computer Science and Technology
 

@@ -27,6 +27,10 @@ ID: n0b0dy
   * The School of Electronics Engineering and Computer Science (EECS).
   * Bachelor of Science in Computer Science and Technology
 
+## Projects
+
+* [**gbdt-rs**](https://github.com/mesalock-linux/gbdt-rs): a fast and secure GBDT library, supporting TEEs such as Intel SGX and ARM TrustZone
+
 ## Publications
 
 * **Tianyi Li**, Tongxin Li, Yu Ding, Yulong Zhang, Tao Wei, Xinhui Han Poster: gbdt-rs: Fast and Trustworthy Gradient Boosting Decision Tree, Security & Privacy IEEE, 2019

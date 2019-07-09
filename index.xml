@@ -52,7 +52,9 @@
 &lt;h2 id=&#34;projects&#34;&gt;Projects&lt;/h2&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/mesalock-linux/gbdt-rs&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;&lt;strong&gt;gbdt-rs&lt;/strong&gt;&lt;/a&gt;: a fast and secure GBDT library, supporting TEEs such as Intel SGX and ARM TrustZone&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/mesalock-linux/gbdt-rs&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;&lt;strong&gt;gbdt-rs&lt;/strong&gt;&lt;/a&gt;: a fast and secure GBDT library, supporting TEEs such as Intel SGX and ARM TrustZone&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/n0b0dyCN/redis-rogue-server&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;&lt;strong&gt;Redis Rogue Server&lt;/strong&gt;&lt;/a&gt;: Redis &amp;lt;= 5.0.5 RCE exploit&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h2 id=&#34;publications&#34;&gt;Publications&lt;/h2&gt;

@@ -31,6 +31,8 @@ ID: n0b0dy
 
 * [**gbdt-rs**](https://github.com/mesalock-linux/gbdt-rs): a fast and secure GBDT library, supporting TEEs such as Intel SGX and ARM TrustZone
 
+* [**Redis Rogue Server**](https://github.com/n0b0dyCN/redis-rogue-server): Redis <= 5.0.5 RCE exploit
+
 ## Publications
 
 * **Tianyi Li**, Tongxin Li, Yu Ding, Yulong Zhang, Tao Wei, Xinhui Han Poster: gbdt-rs: Fast and Trustworthy Gradient Boosting Decision Tree, Security & Privacy IEEE, 2019

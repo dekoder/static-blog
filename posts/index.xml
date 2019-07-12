@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on n0b0dy&#39;s site</title>
-    <link>http://n0b0dycn.me/posts/</link>
+    <link>https://n0b0dycn.me/posts/</link>
     <description>Recent content in Posts on n0b0dy&#39;s site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 07 Jul 2019 10:08:33 +0800</lastBuildDate>
     
-	<atom:link href="http://n0b0dycn.me/posts/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://n0b0dycn.me/posts/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Redis &lt;= 5.0.5 RCE</title>
-      <link>http://n0b0dycn.me/2019/07/redis-rce/</link>
+      <link>https://n0b0dycn.me/2019/07/redis-rce/</link>
       <pubDate>Sun, 07 Jul 2019 10:08:33 +0800</pubDate>
       
-      <guid>http://n0b0dycn.me/2019/07/redis-rce/</guid>
+      <guid>https://n0b0dycn.me/2019/07/redis-rce/</guid>
       <description>Redis &amp;lt;= 5.0.5 RCE 本文介绍由LCBC战队队员Pavel Toporkov在zeronights 2018上介绍的redis 4.x RCE攻击。会议slide链接：https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf
 攻击场景： * 能够访问远程redis的端口（直接访问或者SSRF） * 对redis服务器可以访问到的另一台服务器有控制权
 本文的exp开源在github上：
@@ -32,10 +32,10 @@ CONFIG SET dir /VAR/WWW/HTML CONFIG SET dbfilename sh.</description>
     
     <item>
       <title>Alpha 21264</title>
-      <link>http://n0b0dycn.me/2019/04/alpha-21264/</link>
+      <link>https://n0b0dycn.me/2019/04/alpha-21264/</link>
       <pubDate>Thu, 11 Apr 2019 17:04:22 +0800</pubDate>
       
-      <guid>http://n0b0dycn.me/2019/04/alpha-21264/</guid>
+      <guid>https://n0b0dycn.me/2019/04/alpha-21264/</guid>
       <description>前言 本文为北京大学研究生课程高等计算机体系结构（18-19学年第2学期）的作业。任务是对Alpha Microprocessor的设计进行综述。笔者才疏学浅，不到之处望读者斧正。
 总览 Alpha 21264处理器每个周期可以取四条指令，同时其在内部支持乱序执行。在这种情况下，指令可以被并行执行，并且可以在其最早的能执行的时刻被执行。同时，此处理器支持推测执行，很大程度上加速了处理器的执行速度。Alpha 21264处理器复杂的转移预测机制支持了推测执行。在这些设计的支持下，该处理器的速度比前代Alpha 21164快50%到200%。
 在存储系统方面，Alpha 21264提供了片上与片下的缓存系统，降低了访问存储的平均延迟。同时，21264也增加了对内存的并行访问，提高了数据带宽。在Stream benchmark中，Alpha 21264能够获得1.3GBytes/sec的访存速度。
@@ -59,10 +59,10 @@ Line and way prediction Alpha 21264处理器的I-Cache是64Kb，2路组相连。
     
     <item>
       <title>0ctf 2019 Quals Web writeup</title>
-      <link>http://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</link>
+      <link>https://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</link>
       <pubDate>Tue, 26 Mar 2019 16:04:55 +0800</pubDate>
       
-      <guid>http://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</guid>
+      <guid>https://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</guid>
       <description>本次比赛两个web题都是RicterZ大佬出的，膜一波Orz
 Ghost Pepper 本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：
 然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录http://karaf:karaf@192.168.2.88:31337/jolokia/。到这里我们可以发现这是一个裸的jolokia控制台。

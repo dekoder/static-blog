@@ -63,4 +63,4 @@ Disallow: /
 User-agent: ZoominfoBot
 Disallow: /
 
-Sitemap: http://n0b0dycn.github.io/sitemap.xml
+Sitemap: http://n0b0dycn.me/sitemap.xml

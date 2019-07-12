@@ -2,30 +2,39 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on n0b0dy&#39;s site</title>
-    <link>http://n0b0dycn.github.io/categories/</link>
+    <link>http://n0b0dycn.me/categories/</link>
     <description>Recent content in Categories on n0b0dy&#39;s site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 26 Mar 2019 16:04:55 +0800</lastBuildDate>
     
-	<atom:link href="http://n0b0dycn.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://n0b0dycn.me/categories/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>CTF</title>
-      <link>http://n0b0dycn.github.io/categories/ctf/</link>
+      <link>http://n0b0dycn.me/categories/ctf/</link>
       <pubDate>Tue, 26 Mar 2019 16:04:55 +0800</pubDate>
       
-      <guid>http://n0b0dycn.github.io/categories/ctf/</guid>
+      <guid>http://n0b0dycn.me/categories/ctf/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Researching</title>
-      <link>http://n0b0dycn.github.io/categories/researching/</link>
-      <pubDate>Thu, 11 Apr 2019 17:04:22 +0800</pubDate>
+      <link>http://n0b0dycn.me/categories/researching/</link>
+      <pubDate>Sun, 07 Jul 2019 10:08:33 +0800</pubDate>
       
-      <guid>http://n0b0dycn.github.io/categories/researching/</guid>
+      <guid>http://n0b0dycn.me/categories/researching/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Security</title>
+      <link>http://n0b0dycn.me/categories/security/</link>
+      <pubDate>Sun, 07 Jul 2019 10:08:33 +0800</pubDate>
+      
+      <guid>http://n0b0dycn.me/categories/security/</guid>
       <description></description>
     </item>
     

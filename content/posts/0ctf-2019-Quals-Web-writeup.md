@@ -1,7 +1,7 @@
 ---
 title: "0ctf 2019 Quals Web writeup"
 date: 2019-03-26T16:04:55+08:00
-categories: ["CTF"]
+categories: ["CTF", "Security"]
 tags: ["web", "ctf"]
 ---
 

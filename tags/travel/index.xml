@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>CTF on n0b0dy&#39;s site</title>
-    <link>https://n0b0dycn.me/categories/ctf/</link>
-    <description>Recent content in CTF on n0b0dy&#39;s site</description>
+    <title>travel on n0b0dy&#39;s site</title>
+    <link>https://n0b0dycn.me/tags/travel/</link>
+    <description>Recent content in travel on n0b0dy&#39;s site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 10 Aug 2019 11:34:22 +0800</lastBuildDate>
     
-	<atom:link href="https://n0b0dycn.me/categories/ctf/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://n0b0dycn.me/tags/travel/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -47,31 +47,6 @@ DEFCON总结  一个web手在DEFCON中还是能够很好的生存的，因为其
 吃完饭后我们在旁边路上打车散伙。我们的uber司机纷纷走错路上错高速。其中我和一雄连续碰到了三次走错路然后取消的司机才顺利上车。打到的车的司机是一个埃及人，会用中文说“你好”和“谢谢”。我和一雄打车到家附近吃了越南粉，比较便宜但是也很好吃。
 吃完饭以后回到一雄的公寓休息一会儿就收拾东西回Las Vegas了。由于雷雨天气，飞机延误两个小时。晚上10点左右到了McCarran机场，我上次来的时候行李在T1，于是就轻车熟路地走到了T1，然后发现并没有我的航班的belt。在四处询问以后发现我的行李带在T3，于是赶紧搭摆渡车冲回T3。
 打车到Luxor金字塔酒店，司机蜜汁开到了后门，然后在酒店里转了半天才找到前台。check in以后发现自己的房间在一层，虽然说是金字塔房间但是毛线都看不到ヽ(#`Д´)ﾉ。洗漱睡觉不表。</description>
-    </item>
-    
-    <item>
-      <title>0ctf 2019 Quals Web writeup</title>
-      <link>https://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</link>
-      <pubDate>Tue, 26 Mar 2019 16:04:55 +0800</pubDate>
-      
-      <guid>https://n0b0dycn.me/2019/03/0ctf-2019-quals-web-writeup/</guid>
-      <description>本次比赛两个web题都是RicterZ大佬出的，膜一波Orz
-Ghost Pepper 本题首先通过观察401的响应包找到HTTP Basic认证的用户名karaf：
-然后用密码karaf即可绕过认证。接下来通过目录爆破找到目录http://karaf:karaf@192.168.2.88:31337/jolokia/。到这里我们可以发现这是一个裸的jolokia控制台。
-jolokia是一个Java系统管理解决方案。其采用轻量级的Json格式传输数据，可以方便地管理系统中的Servlet。所以当应用暴露了jolokia目录的时候，基本上算是直接暴露出来一个webshell。我们可以通过访问http://karaf:karaf@192.168.2.88:31337/jolokia/list来查看可用的api，来寻找利用点。在本题中有三种解题方式：
-解法 1 通过karaf下bundle模块远程安装一个我们自己写的恶意bundle，反弹一个shell到自己的服务器上。参考https://github.com/p4-team/ctf/tree/master/2019-03-23-0ctf-quals/web_osgi。但是由于我不熟悉Java编译出来的东西始终装不上Orz，等弄好了把整个项目代码扔github上面去= =
-解法 2 第二种方法应该算是最省事的方法了，即通过karaf下feature模块安装一个webconsole：
-之后我们访问http://192.168.2.88:31337/system/console/bundles就可以进入到webconsole的管理界面。在管理界面点Main -&amp;gt; Goto即可进入console。
-在console中执行cat /flag即可得到flag：
-解法 3 使用karaf中的Instance模块，在安装一个新的instance的时候进行instance的命令行参数注入。我们看karaf源码：https://github.com/apache/karaf。在org/apache/karaf/instance/core/InstancesMBean.java文件中定义了MBean的接口：
-// Operations void startInstance(String name) throws MBeanException; void startInstance(String name, String opts) throws MBeanException; void startInstance(String name, String opts, boolean wait, boolean debug) throws MBeanException;  我们找startInstance方法的实现，在文件org/apache/karaf/instance/command/StartCommand.java中其调用了Instance的Start方法：
-跟进Instance类的start方法，其调用了InstanceService中的startInstance方法：
-继续跟进org/apache/karaf/instance/core/internal/InstanceServiceImpl.java，其调用了doStart方法：
-继续看doStart方法，其中有明显的命令拼接：
-在此处，我们发现javaOpt是我们可控的参数。在InstancesMBeanImpl中我们发现createInstance参数有一个就是javaOpt：
-于是我们给出攻击思路：
- 创建一个新的Instance，在其javaOpt字段进行参数注入 开启这个新的Instance执行我们的命令 停止Instance 删除Instance  最后我们给出exp：
-import requests from pprint import pprint url = &amp;quot;http://111.</description>
     </item>
     
   </channel>

@@ -7,7 +7,7 @@ date: 2019-06-01T16:35:31+08:00
 
 Tianyi Li
 
-[Institute of Computer Science and Technology](http://www.icst.pku.edu.cn/)
+[Wangxuan Institute of Computer Technology, Peking University](http://www.icst.pku.edu.cn/)
 
 [Peking University](https://www.pku.edu.cn/)
 

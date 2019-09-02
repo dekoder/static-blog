@@ -6,10 +6,27 @@
     <description>Recent content in Posts on n0b0dy&#39;s site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 10 Aug 2019 11:34:22 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 31 Aug 2019 20:51:25 +0800</lastBuildDate>
     
 	<atom:link href="https://n0b0dycn.me/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Playing with Windows Defender</title>
+      <link>https://n0b0dycn.me/2019/08/playing-with-windows-defender/</link>
+      <pubDate>Sat, 31 Aug 2019 20:51:25 +0800</pubDate>
+      
+      <guid>https://n0b0dycn.me/2019/08/playing-with-windows-defender/</guid>
+      <description>本文章总结了TokyoWesterns在WCTF上命的Gyotaku和TWCTF上的PHP-NOTE这两道题涉及的Windows Defender相关的侧信道攻击。
+Windows Defender Windows defender是windows上的防护软件，TokyoWesterns在WCTF 2019上提出了一种针对于Windows Defender的侧信道攻击方式AVOracal。
+windows defender行为 根据TokyoWesterns的调研，Windows Defender会进行以下行为：
+ 检查文件内容中是否有恶意内容 改变恶意文件的权限避免用户访问 将文件中的恶意内容替换为null 删除恶意文件  其中在第二步中，如果恶意文件被Windows Defender检测出，用户则不能访问该文件。
+触发Windows Defender EICAR测试文件可以方便地触发windows defender，其文件内容如下：
+X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*  Emulator Windows Defender中的mpengine.dll是Windows Defender的核心dll。其包含对许多文件内容的分析功能，其中包含JScript引擎。该引擎可分析HTML文档，且可以分析其中的JavaScript代码，包括代码中对DOM元素的访问。
+笔者在本机上进行测试，如下内容可以触发Windows Defender：
+&amp;lt;script&amp;gt; var body = document.body.innerHTML; var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&amp;quot;; eval(mal); &amp;lt;/script&amp;gt; &amp;lt;body&amp;gt;&amp;lt;/body&amp;gt;  再访问该文件会被阻止：
+PS C:\Users\n0b0dy\Desktop&amp;gt; type .\eicar.txt type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。 所在位置 行:1 字符: 1 + type .\eicar.txt + ~~~~~~~~~~~~~~~~ + CategoryInfo : ReadError: (C:\Users\n0b0dy\Desktop\eicar.txt:String) [Get-Content], IOException + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.</description>
+    </item>
     
     <item>
       <title>Defcon 27游记</title>

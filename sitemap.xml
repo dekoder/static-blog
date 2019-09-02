@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
     <url>
+      <loc>https://n0b0dycn.me/2019/08/playing-with-windows-defender/</loc>
+      
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
       <loc>https://n0b0dycn.me/2019/08/defcon27/</loc>
       
       <lastmod>2019-08-10T11:34:22+08:00</lastmod>
@@ -75,7 +85,7 @@
     <url>
       <loc>https://n0b0dycn.me/categories/ctf/</loc>
       
-      <lastmod>2019-08-10T11:34:22+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       
@@ -87,7 +97,7 @@
     <url>
       <loc>https://n0b0dycn.me/categories/</loc>
       
-      <lastmod>2019-08-10T11:34:22+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       
@@ -99,7 +109,7 @@
     <url>
       <loc>https://n0b0dycn.me/posts/</loc>
       
-      <lastmod>2019-08-10T11:34:22+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       
@@ -123,7 +133,7 @@
     <url>
       <loc>https://n0b0dycn.me/categories/security/</loc>
       
-      <lastmod>2019-07-07T10:08:33+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       
@@ -159,7 +169,7 @@
     <url>
       <loc>https://n0b0dycn.me/tags/ctf/</loc>
       
-      <lastmod>2019-08-10T11:34:22+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       
@@ -171,7 +181,7 @@
     <url>
       <loc>https://n0b0dycn.me/</loc>
       
-      <lastmod>2019-08-10T11:34:22+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       
@@ -195,7 +205,19 @@
     <url>
       <loc>https://n0b0dycn.me/tags/web/</loc>
       
-      <lastmod>2019-07-07T10:08:33+08:00</lastmod>
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://n0b0dycn.me/tags/windows/</loc>
+      
+      <lastmod>2019-08-31T20:51:25+08:00</lastmod>
       
       
       

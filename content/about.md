@@ -7,7 +7,7 @@ date: 2019-06-01T16:35:31+08:00
 
 Tianyi Li
 
-[Wangxuan Institute of Computer Technology, Peking University](http://www.icst.pku.edu.cn/)
+[Wangxuan Institute of Computer Technology](http://www.icst.pku.edu.cn/)
 
 [Peking University](https://www.pku.edu.cn/)
 
@@ -20,7 +20,7 @@ ID: n0b0dy
 ## Education
 
 * __2018 - present__, Peking University (PKU)
-  * Institute of Computer Science & Technology (ICST).
+  * Wangxuan Institute of Computer Technology (WICT).
   * Master of Science in Computer Application Technology
 
 * __2014 - 2018__, Peking University (PKU)

@@ -41,20 +41,12 @@
     "@type" : "BlogPosting",
     "mainEntityOfPage": {
          "@type": "WebPage",
-         "@id": "https://n0b0dycn.me/"
+         "@id": "https:\/\/n0b0dycn.me\/"
     },
     "articleSection" : "posts",
     "name" : "Playing with Windows Defender",
     "headline" : "Playing with Windows Defender",
-    "description" : "本文章总结了TokyoWesterns在WCTF上命的Gyotaku和TWCTF上的PHP-NOTE这两道题涉及的Windows Defender相关的侧信道攻击。
-Windows Defender Windows defender是windows上的防护软件，TokyoWesterns在WCTF 2019上提出了一种针对于Windows Defender的侧信道攻击方式AVOracal。
-windows defender行为 根据TokyoWesterns的调研，Windows Defender会进行以下行为：
- 检查文件内容中是否有恶意内容 改变恶意文件的权限避免用户访问 将文件中的恶意内容替换为null 删除恶意文件  其中在第二步中，如果恶意文件被Windows Defender检测出，用户则不能访问该文件。
-触发Windows Defender EICAR测试文件可以方便地触发windows defender，其文件内容如下：
-X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*  Emulator Windows Defender中的mpengine.dll是Windows Defender的核心dll。其包含对许多文件内容的分析功能，其中包含JScript引擎。该引擎可分析HTML文档，且可以分析其中的JavaScript代码，包括代码中对DOM元素的访问。
-笔者在本机上进行测试，如下内容可以触发Windows Defender：
-&lt;script&gt; var body = document.body.innerHTML; var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&quot;; eval(mal); &lt;/script&gt; &lt;body&gt;&lt;/body&gt;  再访问该文件会被阻止：
-PS C:\Users\n0b0dy\Desktop&gt; type .\eicar.txt type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。 所在位置 行:1 字符: 1 + type .\eicar.txt + ~~~~~~~~~~~~~~~~ + CategoryInfo : ReadError: (C:\Users\n0b0dy\Desktop\eicar.txt:String) [Get-Content], IOException + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.",
+    "description" : "本文章总结了TokyoWesterns在WCTF上命的Gyotaku和TWCTF上的PHP-NOTE这两道题涉及的Windows Defender相关的侧信道攻击。\nWindows Defender Windows defender是windows上的防护软件，TokyoWesterns在WCTF 2019上提出了一种针对于Windows Defender的侧信道攻击方式AVOracal。\nwindows defender行为 根据TokyoWesterns的调研，Windows Defender会进行以下行为：\n 检查文件内容中是否有恶意内容 改变恶意文件的权限避免用户访问 将文件中的恶意内容替换为null 删除恶意文件  其中在第二步中，如果恶意文件被Windows Defender检测出，用户则不能访问该文件。\n触发Windows Defender EICAR测试文件可以方便地触发windows defender，其文件内容如下：\nX5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H\x2bH*  Emulator Windows Defender中的mpengine.dll是Windows Defender的核心dll。其包含对许多文件内容的分析功能，其中包含JScript引擎。该引擎可分析HTML文档，且可以分析其中的JavaScript代码，包括代码中对DOM元素的访问。\n笔者在本机上进行测试，如下内容可以触发Windows Defender：\n\x26lt;script\x26gt; var body = document.body.innerHTML; var mal = \x26quot;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H\x2bH*\x26quot;; eval(mal); \x26lt;\/script\x26gt; \x26lt;body\x26gt;\x26lt;\/body\x26gt;  再访问该文件会被阻止：\nPS C:\\Users\\n0b0dy\\Desktop\x26gt; type .\\eicar.txt type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。 所在位置 行:1 字符: 1 \x2b type .\\eicar.txt \x2b ~~~~~~~~~~~~~~~~ \x2b CategoryInfo : ReadError: (C:\\Users\\n0b0dy\\Desktop\\eicar.txt:String) [Get-Content], IOException \x2b FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.",
     "inLanguage" : "en-us",
     "author" : "n0b0dy",
     "creator" : "n0b0dy",
@@ -62,11 +54,11 @@ PS C:\Users\n0b0dy\Desktop&gt; type .\eicar.txt type : 无法成功完成操作�
     "accountablePerson" : "n0b0dy",
     "copyrightHolder" : "n0b0dy",
     "copyrightYear" : "2019",
-    "datePublished": "2019-08-31 20:51:25 &#43;0800 &#43;0800",
-    "dateModified" : "2019-08-31 20:51:25 &#43;0800 &#43;0800",
-    "url" : "https://n0b0dycn.me/2019/08/playing-with-windows-defender/",
+    "datePublished": "2019-08-31 20:51:25 \x2b0800 \x2b0800",
+    "dateModified" : "2019-08-31 20:51:25 \x2b0800 \x2b0800",
+    "url" : "https:\/\/n0b0dycn.me\/2019\/08\/playing-with-windows-defender\/",
     "wordCount" : "582",
-    "keywords" : [ "web","ctf","windows", "n0b0dy&#39;s site"]
+    "keywords" : [ "web","ctf","windows", "n0b0dy\x27s site"]
 }
 </script>
 

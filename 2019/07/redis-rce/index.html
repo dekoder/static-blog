@@ -32,35 +32,44 @@
   <link rel="stylesheet" href="/css/main.min.css">
 
 
-  
-  
- 
+   
 
 <script type="application/ld+json">
- "@context" : "http://schema.org",
-    "@type" : "BlogPosting",
-    "mainEntityOfPage": {
-         "@type": "WebPage",
-         "@id": "https:\/\/n0b0dycn.me\/"
-    },
-    "articleSection" : "posts",
-    "name" : "Redis \x3c= 5.0.5 RCE",
-    "headline" : "Redis \x3c= 5.0.5 RCE",
-    "description" : "Redis \x26lt;= 5.0.5 RCE 本文介绍由LCBC战队队员Pavel Toporkov在zeronights 2018上介绍的redis 4.x RCE攻击。会议slide链接：https:\/\/2018.zeronights.ru\/wp-content\/uploads\/materials\/15-redis-post-exploitation.pdf\n攻击场景： * 能够访问远程redis的端口（直接访问或者SSRF） * 对redis服务器可以访问到的另一台服务器有控制权\n本文的exp开源在github上：\nhttps:\/\/github.com\/n0b0dyCN\/redis-rogue-server\n欢迎大家来star~\n背景知识 redis协议 redis支持两种传输协议，一种是明文传输，其命令如下：\nSET keyname value\\n  另一种是经过编码的传输协议：\n*3\\r\\n$3\\r\\nSET\\r\\n$7\\r\\nkeyname\\r\\n$5\\r\\nval ue\\r\\n  将其格式化大概长这个样子：\n*\x26lt;number of arguments\x26gt; CR LF $\x26lt;number of bytes of argument 1\x26gt; CR LF \x26lt;argument data\x26gt; CR LF ... $\x26lt;number of bytes of argument N\x26gt; CR LF \x26lt;argument data\x26gt; CR LF  笔者主要使用第二种协议实现exp。\nCONFIG SET CONFIG SET命令用于对redis进行配置。常用如下：\nCONFIG SET dir \/VAR\/WWW\/HTML CONFIG SET dbfilename sh.",
-    "inLanguage" : "en-us",
-    "author" : "n0b0dy",
-    "creator" : "n0b0dy",
-    "publisher": "n0b0dy",
-    "accountablePerson" : "n0b0dy",
-    "copyrightHolder" : "n0b0dy",
-    "copyrightYear" : "2019",
-    "datePublished": "2019-07-07 10:08:33 \x2b0800 \x2b0800",
-    "dateModified" : "2019-07-07 10:08:33 \x2b0800 \x2b0800",
-    "url" : "https:\/\/n0b0dycn.me\/2019\/07\/redis-rce\/",
-    "wordCount" : "168",
-    "keywords" : [ "web", "n0b0dy\x27s site"]
-}
-</script>
+    {
+        "@context" : "http://schema.org",
+        "@type" : "BlogPosting",
+        "mainEntityOfPage": {
+             "@type": "WebPage",
+             "@id": "https:\/\/n0b0dycn.me\/"
+        },
+        "articleSection" : "posts",
+        "name" : "Redis \x3c= 5.0.5 RCE",
+        "headline" : "Redis \x3c= 5.0.5 RCE",
+        "description" : "Redis \u0026lt;= 5.0.5 RCE 本文介绍由LCBC战队队员Pavel Toporkov在zeronights 2018上介绍的redis 4.x RCE攻击。会议slide链接：https://2018.zeronights.ru/wp-content/uploads/materials/15-redis-post-exploitation.pdf\n攻击场景： * 能够访问远程redis的端口（直接访问或者SSRF） * 对redis服务器可以访问到的另一台服务器有控制权\n本文的exp开源在github上：\nhttps://github.com/n0b0dyCN/redis-rogue-server\n欢迎大家来star~\n背景知识 redis协议 redis支持两种传输协议，一种是明文传输，其命令如下：\nSET keyname value\\n  另一种是经过编码的传输协议：\n*3\\r\\n$3\\r\\nSET\\r\\n$7\\r\\nkeyname\\r\\n$5\\r\\nval ue\\r\\n  将其格式化大概长这个样子：\n*\u0026lt;number of arguments\u0026gt; CR LF $\u0026lt;number of bytes of argument 1\u0026gt; CR LF \u0026lt;argument data\u0026gt; CR LF ... $\u0026lt;number of bytes of argument N\u0026gt; CR LF \u0026lt;argument data\u0026gt; CR LF  笔者主要使用第二种协议实现exp。\nCONFIG SET CONFIG SET命令用于对redis进行配置。常用如下：\nCONFIG SET dir /VAR/WWW/HTML CONFIG SET dbfilename sh.",
+        "inLanguage" : "en-US",
+        "author" : "n0b0dy",
+        "creator" : "n0b0dy",
+        "publisher": {
+            "@type": "Organization",
+            "name": "n0b0dy",
+            "url": "https:\/\/n0b0dycn.me\/",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "%!s(\x3cnil\x3e)\/images\/me\/avatar.png","width": 211,
+                "height": 192
+            }
+        },
+        "image": {},
+        "accountablePerson" : "n0b0dy",
+        "copyrightHolder" : "n0b0dy",
+        "copyrightYear" : "2019",
+        "datePublished": "2019-07-07T10:08:33+08:00",
+        "dateModified" : "2019-07-07T10:08:33+08:00",
+        "url" : "https:\/\/n0b0dycn.me\/2019\/07\/redis-rce\/",
+        "wordCount" : "168",
+        "keywords" : [ "web","Blog" ]
+    }
+    </script>
 
 
   
